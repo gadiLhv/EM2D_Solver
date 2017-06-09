@@ -1,0 +1,9 @@
+function polHdl = mod2D_showCircle(axHdl,circleStruct,faceColor,edgeColor)
+  hold(axHdl)
+  patch (polStruct.x, ...
+         polStuct.y, ...
+         'facecolor', color, ...
+         'edgecolor', edgeColor);
+  
+  hold off;
+end
