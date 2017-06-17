@@ -4,7 +4,7 @@ clear
 close all
 
 modelerPath = './Modeler_2D';
-mesherPath = './Mesh2D_Latest';
+mesherPath = '/home/gadi/Documents/Octave_Projects/Mesh2D_Latest';
 
 %% Mesher parameters
 % Set printout/no printout
@@ -44,7 +44,7 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 %pol1 = mod2D_booleanOperation(rect1,rect2,'subtract');
 %rect1 = mod2D_createRectangleStruct([-2 -2],[2 2]);
 %rect2 = mod2D_createRectangleStruct([-1 -1],[1 1]);
-%pol2 = mod2D_booleanOperation(rect1,rect2,'subtract');
+%pol2 = mod2D+_booleanOperation(rect1,rect2,'subtract');
 %pol1 = mod2D_booleanOperation(pol1,pol2,'add');
 %rect1 = mod2D_createRectangleStruct([2 -0.5],[2.5 1.5]);
 %pol1 = mod2D_booleanOperation(pol1,rect1,'add');
@@ -78,12 +78,34 @@ polList = [{bg}  polList];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hmax = maxBackgrondStep;
 
+% Calculate maximal edge length
+maxEdgeL = sqrt(sum((node(edge(:,2),:)-node(edge(:,1),:)).^2,2));
+maxEdgeL = max(maxEdgeL);
+
+% Make sure that no new "free" nodes are added. In case that new nodes are added
+% in "mid-air", they need to be determined inside the polygon. 
+lsfOpts.kind = 'delaunay';
+lsfOpts.dhdx = 1;
+lsfOpts.rho2 = sqrt(maxEdgeL*10);
 % Estimate Local Feature Size (LFS) for each node\part
 [vlfs,tlfs,hlfs] = lfshfn2( node,...
                             edge,...
-                            face);
+                            face,...
+                            lsfOpts);
 
-                            
+           
+           
+% Show initial feature size estimation
+patch('faces',tlfs,'vertices',vlfs,'facecolor',[1 1 1],'edgecolor',[0 0 0])
+hold on;
+plot(node(:,1),node(:,2),'.r','markersize',15);
+hold off;
+
+%hs = [sqrt(sum((vlfs(tlfs(:,2),:)-vlfs(tlfs(:,1),:)).^2,2)) ...
+%      sqrt(sum((vlfs(tlfs(:,3),:)-vlfs(tlfs(:,2),:)).^2,2)) ... 
+%      sqrt(sum((vlfs(tlfs(:,1),:)-vlfs(tlfs(:,3),:)).^2,2))];
+
+
 % Where the length come out larger than hmax, limit.
 hlfs = min(hmax,hlfs) ;
 
@@ -107,7 +129,13 @@ hfun = @trihfn2;
           tlfs,...
           slfs,...
           hlfs) ;
-
+%[ vert,...              % Vertices of mesh cells
+%  etri,...              % Constrained edge list (???)
+%  tria,...              % Triangle threesomes (attached to VERT)
+%  tnum] = ...           % Part assignments
+%  refine2(node, ...     % Full node list
+%          edge, ...     % Edge connectivity
+%          face);
 
 %
 figure;
