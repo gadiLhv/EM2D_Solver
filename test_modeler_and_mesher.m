@@ -19,8 +19,8 @@ maxBackgrondStep = 1.5;
 maxMaterialStep = 0.6;
 
 %% Define background
-bgBoundX = [-4 4];
-bgBoundY = [-4 4];
+bgBoundX = [-4 4]*10;
+bgBoundY = [-4 4]*10;
 
 %% Model this shit!
 
@@ -30,10 +30,10 @@ addpath(mesherPath);
 bg = mod2D_createRectangleStruct([bgBoundX(1) bgBoundY(1)],[bgBoundX(2) bgBoundY(2)]);
 
 % Geometry 1
-pol1 = mod2D_createRectangleStruct([-2 -2],[2 -1]);
-pol2 = mod2D_createRectangleStruct([-2 -1],[2 0]);
-pol3 = mod2D_createRectangleStruct([-2 0],[2 1]);
-rect1 = mod2D_createRectangleStruct([-1 -1.5],[1 0.5]);
+pol1 = mod2D_createRectangleStruct([-2 -2]*10,[2 -1]*10);
+pol2 = mod2D_createRectangleStruct([-2 -1]*10,[2 0]*10);
+pol3 = mod2D_createRectangleStruct([-2 0]*10,[2 1]*10);
+rect1 = mod2D_createRectangleStruct([-1 -1.5]*10,[1 0.5]*10);
 pol1 =  mod2D_booleanOperation(pol1,rect1,'subtract');
 pol2 =  mod2D_booleanOperation(pol2,rect1,'subtract');
 pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
@@ -78,9 +78,9 @@ polList = [{bg}  polList];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hmax = maxBackgrondStep;
 
-% Calculate maximal edge length
-maxEdgeL = sqrt(sum((node(edge(:,2),:)-node(edge(:,1),:)).^2,2));
-maxEdgeL = max(maxEdgeL);
+% Diagonal of the bounding box is the maximum possible distance
+maxEdgeL = sqrt((bgBoundX(2)-bgBoundX(1)).^2 + (bgBoundY(2)-bgBoundY(1)).^2);
+
 
 % Make sure that no new "free" nodes are added. In case that new nodes are added
 % in "mid-air", they need to be determined inside the polygon. 
