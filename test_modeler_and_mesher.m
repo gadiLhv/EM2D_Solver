@@ -13,10 +13,10 @@ outputMesh = true(1);
 % Global mesh properties
 
 % 1. Max volume step for background
-maxBackgrondStep = 1.5;
+maxBackgrondStep = 1.5*10;
 
 % 2. Max step for amaterials
-maxMaterialStep = 0.6;
+maxMaterialStep = 0.6*10;
 
 %% Define background
 bgBoundX = [-4 4]*10;

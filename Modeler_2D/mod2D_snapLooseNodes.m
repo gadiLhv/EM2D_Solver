@@ -4,13 +4,18 @@ function [node,connectivity,faceAssignment] = mod2D_snapLooseNodes(node,connecti
 
 
 while(1)
+    
+  [nodeToSnap,edgeToSnapTo,t] = mod2D_pointOnEdge(node,...
+                                                  node,...
+                                                  connectivity,...
+                                                  minDistTH);
   
-  [nodeToSnap,edgeToSnapTo,t] = mod2D_findLooseNodes( node,... 
-                                                      connectivity,...
-                                                      faceAssignment,...
-                                                      minDistTH);
   
-  
+  % Exclude "self" nodes (t == 0 or t==1)
+  selfNode = (t == 0) | (t == 1);
+  nodeToSnap(selfNode) = [];
+  edgeToSnapTo(selfNode) = [];
+  t(selfNode) = [];
   
   % If, and only if, there are no more nodes to snap, then you are free to go
   if(isempty(nodeToSnap))
@@ -30,7 +35,8 @@ while(1)
   cNodeToSnapIdx = nodeToSnap(binEdge);
   
   % Sort nodes according to distance from first node
-  ts = t(cNodeToSnapIdx + (cEdgeIdx-1)*size(t,1));
+  ts = t(binEdge);
+  
   [~,sortIdx] = sort(ts);
   % Create new set of nodes
   
