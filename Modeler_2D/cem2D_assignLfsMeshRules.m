@@ -1,4 +1,4 @@
-function lfsStruct = cem2D_assignLfsMeshRules(geomStruct,lfsStruct,materialProps,meshProps)
+function lfsStruct = cem2D_assignLfsMeshRules(geomStruct,lfsStruct,materialList,meshProps)
 % After Local Feature Size (LFS) approximation, there is a new triangular 
 % assignement. According to material properties, lfsh rules are to be changed,
 % according to "worse case" (shortest wavelength).
@@ -7,13 +7,20 @@ node = geomStruct.node;   % Current geometry initial node list
 edge = geomStruct.edge;   % Current geometry initial edge list
 face = geomStruct.face;   % Current geometry edge->face assignement cell array
 
+% Also, material assignments.
+materialAss = geomStruct.materials;
+
 vlfs = lfsStruct.vlfs;    % Vertices of initial LFS
 tlfs = lfsStruct.tlfs;    % Triangles constructed by initial LFS
 hlfs = lfsStruct.hlfs;    % LFS approximated by initial LFS
 
+
 % Preliminary data to determine mesh sizes
 c0 = meshProps.c0;    % Free space speed of light
 f0 = meshProps.f0;    % Frequency for current mesh
+
+% Extract threshold for "Same node"\"Node on edge" criteria
+distTH = meshProps.sameNodeDistTH;
 
 % Relative mesh edge maximum with respect to wavelength
 relWLmeshMax = meshProps.relWLmeshMax; 
@@ -27,7 +34,8 @@ wl0 = wl0*mod2D_lengthUnitFactor(meshProps.lengthUnits);
 % allowed mesh size.
 edgeMax = [];
 for faceIdx = 1:numel(face)
-  cMaterialProps = materialProps{faceIdx};
+  % Extract current parts material properties
+  cMaterialProps = CEM2D_getMaterialPropsFromName(materialAss{faceIdx},materialList);
   m0 = cMaterialProps.m0;
   e0 = cMaterialProps.e0;
   
@@ -42,7 +50,10 @@ for faceIdx = 1:numel(face)
   cEdge = edge(cFace,:);
   
   % Now match the vertices from the lfs list to this face
-  [vertIdx,whichEdge,t] = mod2D_pointOnEdge(vlfs,node,edge,1e-9);
+  [vertIdx,~,~] = mod2D_pointOnEdge(vlfs,...      % All the vertices in the LFS generation
+                                    node,...      % Full node list in the original geometry
+                                    cEdge,...     
+                                    distTH);
   
   % For each of these vertices, match a new maximum edge length.
   cHlfs = hlfs(vertIdx);

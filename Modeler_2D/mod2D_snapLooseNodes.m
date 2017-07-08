@@ -11,8 +11,8 @@ while(1)
                                                   minDistTH);
   
   
-  % Exclude "self" nodes (t == 0 or t==1)
-  selfNode = (t == 0) | (t == 1);
+  % Exclude "self" nodes (t == 0 or t==1), with respect to threshold
+  selfNode = (abs(t) <= minDistTH) | (abs(t - 1) <= minDistTH);
   nodeToSnap(selfNode) = [];
   edgeToSnapTo(selfNode) = [];
   t(selfNode) = [];

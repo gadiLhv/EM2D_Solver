@@ -12,20 +12,36 @@ outputMesh = true(1);
 
 % Global mesh properties
 
-% 1. Max volume step for background
-maxBackgrondStep = 1.5*10;
+f0 = 2e9;
 
-% 2. Max step for amaterials
-maxMaterialStep = 0.6*10;
+% 1. Maximum allowed mesh size with respect to wavelength.
+% Take note that this takes into consideration the material
+% properties.
+relWLmeshMax = 0.33;
+
+% 2. Bounding box addition (Currently this is mesh
+% properties, in the future this needs to belong to B.C.)
+% This is given in relaitve terms of wavelength.
+boundingBoxAddSpace = 0.25;
+
+% Create default material
+
+
+addpath(modelerPath);
+addpath(mesherPath);
+
+
+
+% Create the default material
+defaultMaterial = cem2D_createMaterialDefs;
+
+materialList = cem2D_addMaterialToList(defaultMaterial);
 
 %% Define background
 bgBoundX = [-4 4]*10;
 bgBoundY = [-4 4]*10;
 
 %% Model this shit!
-
-addpath(modelerPath);
-addpath(mesherPath);
 
 bg = mod2D_createRectangleStruct([bgBoundX(1) bgBoundY(1)],[bgBoundX(2) bgBoundY(2)]);
 
