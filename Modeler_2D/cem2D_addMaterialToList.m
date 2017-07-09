@@ -6,7 +6,15 @@ function materialList = cem2D_addMaterialToList(material,materialList)
   
   nMaterials = numel(materialList);
   
+  % If there is no material to add, add the default
+  if(~exist('material'))
+    material = cem2D_createMaterialDefs;
+  end
   
+  % If for some reason the user passed an empty material, add the default.
+  if(isempty(material))
+    material = cem2D_createMaterialDefs;
+  end
   
   % Check if material already exists:
   % Extract name
@@ -21,7 +29,6 @@ function materialList = cem2D_addMaterialToList(material,materialList)
     throw(errStruct)
   end
   
-  errMsgStruct = mod2D_createErrorMsg(errMsg,invocation)
   % Create a temporary material list
   newMaterialList = cell([nMaterials+1 1]);
   

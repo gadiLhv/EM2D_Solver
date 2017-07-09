@@ -13,7 +13,7 @@ outputMesh = true(1);
 % Global mesh properties
 
 f0 = 2e9;
-
+c0 = 3e8;
 % 1. Maximum allowed mesh size with respect to wavelength.
 % Take note that this takes into consideration the material
 % properties.
@@ -31,19 +31,22 @@ addpath(modelerPath);
 addpath(mesherPath);
 
 
-
 % Create the default material
 defaultMaterial = cem2D_createMaterialDefs;
-
+% Create the material list with only the default material
 materialList = cem2D_addMaterialToList(defaultMaterial);
 
-%% Define background
-bgBoundX = [-4 4]*10;
-bgBoundY = [-4 4]*10;
+% Add three materials
+material3p1 = cem2D_createMaterialDefs('name','plastic310','er',3.1);
+material5p5 = cem2D_createMaterialDefs('name','plastic550','er',5.5);
+material7p2 = cem2D_createMaterialDefs('name','plastic720','er',7.2);
 
-%% Model this shit!
+materialList = cem2D_addMaterialToList(material3p1,materialList);
+materialList = cem2D_addMaterialToList(material5p5,materialList);
+materialList = cem2D_addMaterialToList(material7p2,materialList);
 
-bg = mod2D_createRectangleStruct([bgBoundX(1) bgBoundY(1)],[bgBoundX(2) bgBoundY(2)]);
+%% Create the geometry
+
 
 % Geometry 1
 pol1 = mod2D_createRectangleStruct([-2 -2]*10,[2 -1]*10);
@@ -67,8 +70,21 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 %pol2 = mod2D_createRectangleStruct([-2.5 1],[-2 2]); % Bad at handling duplicate nodes. Remove them while creating connectivty list
 %pol3 = mod2D_createPolygonStruct([-0.7 0.4 1],[-0.6 -0.8 1]);
 
-
+% Create polygon list
 polList = {pol1,pol2,pol3};
+
+% Get default material properties
+defaultMaterial = cem2D_getMaterialPropsFromName('default',materialList);
+default_er = defaultMaterial.er;
+default_mr = defaultMaterial.mr;
+
+% Create bounding box (background)
+bBox = mod2D_createBoundingBox(...
+        polList,...
+        boundingBoxAddSpace*(c0/f0)/sqrt(default_er*default_mr));
+
+% Assign materials to polygons
+
 
 % Add all polygons before subtracting from the background
 if(numel(polList) < 2)

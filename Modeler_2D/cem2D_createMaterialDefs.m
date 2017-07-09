@@ -11,7 +11,7 @@ materialDef = struct(...
   'tand_e',0,...        % Dielectric loss tangent - used only in case of normal
   'tand_m',0,...        % Magnetic loss tangent - used only in case of normal
   'f_m',0 ...           % The frequency in which the data is measured
-  )
+  );
 
 % Start parsing possible responses
 narg = numel(varargin);
@@ -50,7 +50,7 @@ for argIdx = 1:(numel(varargin)/2)
         error(sprintf('Matching value to argument ''%s'' needs to be numeric',argName));
       end
       % Assign value
-      strToEval = sprintf('materialDef.%s = %f',argName,argVal);
+      strToEval = sprintf('materialDef.%s = %f;',argName,argVal);
       eval(strToEval);
   end
 end
