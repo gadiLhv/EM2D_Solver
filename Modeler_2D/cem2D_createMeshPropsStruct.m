@@ -6,8 +6,12 @@ meshPropStruct = struct(...
     'boundingBoxAddSpace',0.25,...    % 
     'useFreespaceWLonly',0,...        % Can be 1 or 0
     'algorithmType','delaunay',...    % This is currently the only one, but 'mesh2D' can cope with others
+    'stitchingTolerance',1e-8 ...
   );
 
+
+ 
+ 
 % Start parsing possible responses
 narg = numel(varargin);
 
@@ -18,5 +22,30 @@ end
 
 % For validation of inputs
 validParams = fieldnames(meshPropStruct);
+
+% Update all fields
+for argIdx = 1:2:((nargin/2)+1)
+  % Validate that paramter has the correct name
+  validString = validatestring(varargin{argIdx},validParams);
+  % Validate value class
+  value = varargin{argIdx+1};
+  requiredClass = class(getfield(meshPropStruct,validString));
+  givenClass = class(value);
+  if(~strcmp(requiredClass,givenClass))
+    error(...
+      sprintf('Parameter ''%s'' needs to be of class ''%s''',validString,requiredClass)...
+    );
+  end
+  
+  setfield(meshPropStruct,validString,varargin{argIdx+1});
+  
+  if(~ischar(value))
+    value = sprintf('%f',value);
+  end
+  
+  eval(['meshPropStruct. ' validString ' = ' value ';']);
+  
+  % TBD: Detect wrong possible values
+end
 
 end

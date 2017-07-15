@@ -12,8 +12,8 @@ outputMesh = true(1);
 
 % Global mesh properties
 
-f0 = 2e9;
-c0 = 3e8;
+fMin = 1;
+fMax = 3;
 % 1. Maximum allowed mesh size with respect to wavelength.
 % Take note that this takes into consideration the material
 % properties.
@@ -30,7 +30,14 @@ boundingBoxAddSpace = 0.25;
 addpath(modelerPath);
 addpath(mesherPath);
 
+% Define mesh properties
+meshProps = cem2D_createMeshPropsStruct(...
+              'relWLmeshMax',relWLmeshMax,...
+              'boundingBoxAddSpace',boundingBoxAddSpace);
 
+% Define simulation properties
+simProps = cem2D_createSimPropsStruct('fMin',fMin,'fMax',fMax);
+              
 % Create the default material
 defaultMaterial = cem2D_createMaterialDefs;
 % Create the material list with only the default material
@@ -75,13 +82,13 @@ polList = {pol1,pol2,pol3};
 
 % Get default material properties
 defaultMaterial = cem2D_getMaterialPropsFromName('default',materialList);
-default_er = defaultMaterial.er;
-default_mr = defaultMaterial.mr;
 
 % Create bounding box (background)
 bBox = mod2D_createBoundingBox(...
         polList,...
-        boundingBoxAddSpace*(c0/f0)/sqrt(default_er*default_mr));
+        meshProps,...
+        simProps,...
+        defaultMaterial);
 
 % Assign materials to polygons
 
@@ -99,10 +106,10 @@ elseif(numel(polList) >= 2)
 end
 
 % Subtract all polygons from background
-bg = mod2D_booleanOperation(bg,allPols,'subtract');
+bBox = mod2D_booleanOperation(bBox,allPols,'subtract');
 
-polList = [{bg}  polList];
-[node,edge,face] = mod2D_polygonToFaceList(polList,1e-8);
+polList = [{bBox}  polList];
+[node,edge,face] = mod2D_polygonToFaceList(polList,meshProps.stitchingTolerance);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
