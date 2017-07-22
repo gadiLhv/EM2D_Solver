@@ -1,14 +1,11 @@
-function lfsStruct = cem2D_assignLfsMeshRules(geomStruct,lfsStruct,materialList,meshProps)
+function lfsStruct = cem2D_assignLfsMeshRules(polygonList,materialAssignment,lfsStruct,materialList,meshProps,simProps)
 % After Local Feature Size (LFS) approximation, there is a new triangular 
 % assignement. According to material properties, lfsh rules are to be changed,
 % according to "worse case" (shortest wavelength).
 
-node = geomStruct.node;   % Current geometry initial node list
-edge = geomStruct.edge;   % Current geometry initial edge list
-face = geomStruct.face;   % Current geometry edge->face assignement cell array
-
-% Also, material assignments.
-materialAss = geomStruct.materials;
+c0 = physical_constant('speed of light in vacuum');
+e0 = physical_constant('electric constant');
+m0 = physical_constant('mag. constant');
 
 vlfs = lfsStruct.vlfs;    % Vertices of initial LFS
 tlfs = lfsStruct.tlfs;    % Triangles constructed by initial LFS
