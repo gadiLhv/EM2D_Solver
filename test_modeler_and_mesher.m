@@ -80,6 +80,9 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 % Create polygon list
 polList = {pol1,pol2,pol3};
 
+% Assign materials
+materialAssignment = {'plastic310','plastic550','plastic720'};
+
 % Get default material properties
 defaultMaterial = cem2D_getMaterialPropsFromName('default',materialList);
 
@@ -108,18 +111,21 @@ end
 % Subtract all polygons from background
 bBox = mod2D_booleanOperation(bBox,allPols,'subtract');
 
+% Add bounding box to part list
 polList = [{bBox}  polList];
+
+% Assign default material to bounding box
+materialAssignment = [{'default'} materialAssignment];
+
 [node,edge,face] = mod2D_polygonToFaceList(polList,meshProps.stitchingTolerance);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Initial feature size estimation %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hmax = maxBackgrondStep;
 
 % Diagonal of the bounding box is the maximum possible distance
-maxEdgeL = sqrt((bgBoundX(2)-bgBoundX(1)).^2 + (bgBoundY(2)-bgBoundY(1)).^2);
-
+maxEdgeL = cem2D_calcMaxEdgeL(polList{1});
 
 % Make sure that no new "free" nodes are added. In case that new nodes are added
 % in "mid-air", they need to be determined inside the polygon. 
