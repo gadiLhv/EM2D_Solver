@@ -41,7 +41,7 @@ t = bsxfun(@times,t,1./(L.'));
 distCond = d < minDistTH;
 
 % 2. Second condition: Projection is withing bounds
-projCond = (t >= 0) & (t <= 1);
+projCond = (t >= -minDistTH) & (t <= 1+minDistTH);
                 
 % Unify all three conditions
 binSnapNodes = distCond & projCond;

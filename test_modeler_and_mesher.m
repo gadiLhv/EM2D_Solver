@@ -22,7 +22,7 @@ relWLmeshMax = 0.33;
 % 2. Bounding box addition (Currently this is mesh
 % properties, in the future this needs to belong to B.C.)
 % This is given in relaitve terms of wavelength.
-boundingBoxAddSpace = 0.25;
+boundingBoxAddSpace = 0.125;
 
 % Create default material
 
@@ -138,21 +138,29 @@ lsfOpts.rho2 = sqrt(maxEdgeL*10);
                             face,...
                             lsfOpts);
 
+                            
+%% Show initial feature size estimation
+%patch('faces',tlfs,'vertices',vlfs,'facecolor',[1 1 1],'edgecolor',[0 0 0])
+%hold on;
+%plot(node(:,1),node(:,2),'.r','markersize',15);
+%hold off;
            
-           
-% Show initial feature size estimation
-patch('faces',tlfs,'vertices',vlfs,'facecolor',[1 1 1],'edgecolor',[0 0 0])
-hold on;
-plot(node(:,1),node(:,2),'.r','markersize',15);
-hold off;
-
-%hs = [sqrt(sum((vlfs(tlfs(:,2),:)-vlfs(tlfs(:,1),:)).^2,2)) ...
-%      sqrt(sum((vlfs(tlfs(:,3),:)-vlfs(tlfs(:,2),:)).^2,2)) ... 
-%      sqrt(sum((vlfs(tlfs(:,1),:)-vlfs(tlfs(:,3),:)).^2,2))];
+lfsStruct = struct('vlfs',vlfs,'tlfs',tlfs,'hlfs',hlfs);
 
 
-% Where the length come out larger than hmax, limit.
-hlfs = min(hmax,hlfs) ;
+lfsStruct = cem2D_assignLfsMeshRules(...
+              node,...
+              edge,...
+              face,...
+              materialAssignment,...
+              lfsStruct,...
+              materialList,...
+              meshProps,...
+              simProps);
+
+              
+% Update local feature size according to wavelength constrants.
+hlfs = lfsStruct.hlfs;
 
 % Super special indexing function for AABB tree queries
 slfs = idxtri2(vlfs,tlfs);
@@ -174,13 +182,7 @@ hfun = @trihfn2;
           tlfs,...
           slfs,...
           hlfs) ;
-%[ vert,...              % Vertices of mesh cells
-%  etri,...              % Constrained edge list (???)
-%  tria,...              % Triangle threesomes (attached to VERT)
-%  tnum] = ...           % Part assignments
-%  refine2(node, ...     % Full node list
-%          edge, ...     % Edge connectivity
-%          face);
+
 
 %
 figure;

@@ -13,8 +13,9 @@ end
 
 materialStruct = [];
 
-for cMaterialCell = materialList;
-  cMaterial = cMaterialCell{1};
+
+for materialIdx = 1:numel(materialList)
+  cMaterial = materialList{materialIdx};
   % Check if this is 
   if(strcmp(cMaterial.name,materialName))
     materialStruct = cMaterial;
