@@ -6,7 +6,8 @@ meshPropStruct = struct(...
     'boundingBoxAddSpace',0.25,...    % 
     'useFreespaceWLonly',0,...        % Can be 1 or 0
     'algorithmType','delaunay',...    % This is currently the only one, but 'mesh2D' can cope with others
-    'stitchingTolerance',1e-8 ...
+    'stitchingTolerance',1e-8, ...    % 
+    'performMeshSmoothing',1, ...     % 
   );
 
 
@@ -42,7 +43,8 @@ for argIdx = 1:2:((nargin/2)+1)
   if(~ischar(value))
     value = sprintf('%f',value);
   end
-  
+  t wrong possible values
+end
   eval(['meshPropStruct. ' validString ' = ' value ';']);
   
   % TBD: Detect wrong possible values

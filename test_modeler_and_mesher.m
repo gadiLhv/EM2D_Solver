@@ -170,9 +170,9 @@ hfun = @trihfn2;
 
 % Refine initial mesh
 [ vert,...              % Vertices of mesh cells
-  etri,...              % Constrained edge list (???)
+  etri,...              % Edges belonging to face (part) boundaries
   tria,...              % Triangle threesomes (attached to VERT)
-  tnum] = ...           % Part assignments
+  tnum] = ...           % Part (face) assignments
   refine2(node, ...     % Full node list
           edge, ...     % Edge connectivity
           face, ...     % Edge->Part assignment
@@ -206,6 +206,7 @@ patch('faces',tria(tnum==4,1:3),'vertices',vert, ...
     'edgecolor',[0,0,0]) ;
 title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(tria,1))]) ;
+    
 hold off;
 
 % Smooth mesh
