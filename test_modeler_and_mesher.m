@@ -4,7 +4,8 @@ clear
 close all
 
 modelerPath = './Modeler_2D';
-mesherPath = '/home/gadi/Documents/Octave_Projects/Mesh2D_Latest';
+mesherPath = '/home/gadi/Repositories/mesh2d';
+meshWrapperPath = './Mesh_2D';
 
 %% Mesher parameters
 % Set printout/no printout
@@ -19,7 +20,7 @@ fMax = 3;
 % properties.
 relWLmeshMax = 0.33;
 
-% 2. Bounding box addition (Currently this is mesh
+% 2. Bounding box additimesh.vert = on (Currently this is mesh
 % properties, in the future this needs to belong to B.C.)
 % This is given in relaitve terms of wavelength.
 boundingBoxAddSpace = 0.125;
@@ -29,10 +30,11 @@ boundingBoxAddSpace = 0.125;
 
 addpath(modelerPath);
 addpath(mesherPath);
+addpath(meshWrapperPath);
 
 % Define mesh properties
-meshProps = cem2D_createMeshPropsStruct(...
-              'relWLmeshMax',relWLmeshMax,...
+meshProps = mesh2D_createMeshPropsStruct(...
+              'relWLmeshMax',relWLmeshMax, ...
               'boundingBoxAddSpace',boundingBoxAddSpace);
 
 % Define simulation properties
@@ -120,119 +122,69 @@ materialAssignment = [{'default'} materialAssignment];
 [node,edge,face] = mod2D_polygonToFaceList(polList,meshProps.stitchingTolerance);
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Initial feature size estimation %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%
+% Mesh! %
+%%%%%%%%%
 
-% Diagonal of the bounding box is the maximum possible distance
-maxEdgeL = cem2D_calcMaxEdgeL(polList{1});
-
-% Make sure that no new "free" nodes are added. In case that new nodes are added
-% in "mid-air", they need to be determined inside the polygon. 
-lsfOpts.kind = 'delaunay';
-lsfOpts.dhdx = 1;
-lsfOpts.rho2 = sqrt(maxEdgeL*10);
-% Estimate Local Feature Size (LFS) for each node\part
-[vlfs,tlfs,hlfs] = lfshfn2( node,...
-                            edge,...
-                            face,...
-                            lsfOpts);
-
-                            
-%% Show initial feature size estimation
-%patch('faces',tlfs,'vertices',vlfs,'facecolor',[1 1 1],'edgecolor',[0 0 0])
-%hold on;
-%plot(node(:,1),node(:,2),'.r','markersize',15);
-%hold off;
-           
-lfsStruct = struct('vlfs',vlfs,'tlfs',tlfs,'hlfs',hlfs);
+% 1. First phase of meas
+initMesh = mesh2D_generateInitialMesh(...
+            polList,...             % Entire polygon list. This is mainly to calculate the maximum\minimum edge length
+            materialAssignment,...  % Material assignments for initial LFS assignment
+            materialList,...        % Corresponding material properties
+            meshProps,...           % Darrens Mesher properties
+            simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
 
-lfsStruct = cem2D_assignLfsMeshRules(...
-              node,...
-              edge,...
-              face,...
-              materialAssignment,...
-              lfsStruct,...
-              materialList,...
-              meshProps,...
-              simProps);
-
-              
-% Update local feature size according to wavelength constrants.
-hlfs = lfsStruct.hlfs;
-
-% Super special indexing function for AABB tree queries
-slfs = idxtri2(vlfs,tlfs);
-
-% Something to do with prior triangular indexing
-hfun = @trihfn2;
-
-% Refine initial mesh
-[ vert,...              % Vertices of mesh cells
-  etri,...              % Edges belonging to face (part) boundaries
-  tria,...              % Triangle threesomes (attached to VERT)
-  tnum] = ...           % Part (face) assignments
-  refine2(node, ...     % Full node list
-          edge, ...     % Edge connectivity
-          face, ...     % Edge->Part assignment
-          [], ...       % Options field (RHO not used here. Test!)
-          hfun, ...     % Cool meshing limiting function
-          vlfs,...      % Arguments for this function
-          tlfs,...
-          slfs,...
-          hlfs) ;
-
-
-%
-figure;
+% Plot initial mesh
+figure('position',[240    165   1053    596]);
 subplot(1,2,1);
-patch('faces',tria(tnum==1,1:3),'vertices',vert, ...
+patch('faces',initMesh.tria(initMesh.tnum == 1,1:3),'vertices',initMesh.vert, ...
     'facecolor',[1.,1.,1.], ...
     'edgecolor',[0,0,0]) ;
 hold on; 
 axis image off;
 randColor = rand([1 3]);
-patch('faces',tria(tnum==2,1:3),'vertices',vert, ...
+patch('faces',initMesh.tria(initMesh.tnum == 2,1:3),'vertices',initMesh.vert, ...
+    'facecolor',randColor, ...
+    'edgecolor',[0,0,0]) ;(
+randColor = rand([1 3]);
+patch('faces',initMesh.tria(initMesh.tnum == 3,1:3),'vertices',initMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
-patch('faces',tria(tnum==3,1:3),'vertices',vert, ...
-    'facecolor',randColor, ...
-    'edgecolor',[0,0,0]) ;
-randColor = rand([1 3]);
-patch('faces',tria(tnum==4,1:3),'vertices',vert, ...
+patch('faces',initMesh.tria(initMesh.tnum == 4,1:3),'vertices',initMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
-    num2str(size(tria,1))]) ;
+    num2str(size(initMesh.tria,1))]) ;
     
 hold off;
 
-% Smooth mesh
-[vert,etri,tria,tnum] = smooth2(vert,etri,tria,tnum) ;
+smoothMesh = mesh2D_smoothMesh(initMesh);
+
 
 subplot(1,2,2);
-patch('faces',tria(tnum==1,1:3),'vertices',vert, ...
+patch('faces',smoothMesh.tria(smoothMesh.tnum == 1,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',[1.,1.,1.], ...
     'edgecolor',[0,0,0]) ;
 hold on; 
 axis image off;
 randColor = rand([1 3]);
-patch('faces',tria(tnum==2,1:3),'vertices',vert, ...
+patch('faces',smoothMesh.tria(smoothMesh.tnum == 2,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
-patch('faces',tria(tnum==3,1:3),'vertices',vert, ...
+patch('faces',smoothMesh.tria(smoothMesh.tnum == 3,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
-patch('faces',tria(tnum==4,1:3),'vertices',vert, ...
+patch('faces',smoothMesh.tria(smoothMesh.tnum == 4,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 title(['MESH-Smoothed.: KIND=DELFRONT, |TRIA|=', ...
-    num2str(size(tria,1))]) ;
+    num2str(size(smoothMesh.tria,1))]) ;
 hold off;
 
 rmpath(modelerPath);
 rmpath(mesherPath);
+rmpath(meshWrapperPath);

@@ -1,4 +1,4 @@
-function lfsStruct = cem2D_assignLfsMeshRules(node,edge,face,materialAssignment,lfsStruct,materialList,meshProps,simProps)
+function lfsStruct = mesh2D_assignLfsMeshRules(node,edge,face,materialAssignment,lfsStruct,materialList,meshProps,simProps)
 % After Local Feature Size (LFS) approximation, there is a new triangular 
 % assignement. According to material properties, lfsh rules are to be changed,
 % according to "worse case" (shortest wavelength).
