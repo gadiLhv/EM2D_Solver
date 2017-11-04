@@ -82,7 +82,7 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 % Create polygon list
 polList = {pol1,pol2,pol3};
 
-% Assign materials
+% Assign materials,er,mr
 materialAssignment = {'plastic310','plastic550','plastic720'};
 
 % Get default material properties
@@ -134,7 +134,9 @@ initMesh = mesh2D_generateInitialMesh(...
             meshProps,...           % Darrens Mesher properties
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
-
+% 2. Smooth the mesh
+smoothMesh = mesh2D_smoothMesh(initMesh);
+            
 % Plot initial mesh
 figure('position',[240    165   1053    596]);
 subplot(1,2,1);
@@ -146,22 +148,26 @@ axis image off;
 randColor = rand([1 3]);
 patch('faces',initMesh.tria(initMesh.tnum == 2,1:3),'vertices',initMesh.vert, ...
     'facecolor',randColor, ...
-    'edgecolor',[0,0,0]) ;(
+    'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
 patch('faces',initMesh.tria(initMesh.tnum == 3,1:3),'vertices',initMesh.vert, ...
-    'facecolor',randColor, ...
+    'facecolor',randColor,...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
 patch('faces',initMesh.tria(initMesh.tnum == 4,1:3),'vertices',initMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
+    
+edgeVect1 = initMesh.vert(initMesh.etri(:,1),:);
+edgeVect2 = initMesh.vert(initMesh.etri(:,2),:);
+edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
+edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
+plot(edgeVectX,edgeVectY,'-','linewidth',3);
+    
 title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(initMesh.tria,1))]) ;
     
 hold off;
-
-smoothMesh = mesh2D_smoothMesh(initMesh);
-
 
 subplot(1,2,2);
 patch('faces',smoothMesh.tria(smoothMesh.tnum == 1,1:3),'vertices',smoothMesh.vert, ...
