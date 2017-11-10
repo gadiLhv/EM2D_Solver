@@ -51,8 +51,6 @@ end
 % bs vector elements
 bs = zeros([2 size(ls,1)]);
 
-
-
 for i = 1:2
     bs(i,:) = qs.*ls/2;
 end

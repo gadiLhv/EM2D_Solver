@@ -16,7 +16,7 @@ addpath(mesherPath);
 addpath(meshWrapperPath);
 addpath(solverPath);
 
-load solver_predata
+load solver_predata.mat
 
 %% Construct matrix for volume\material B.Cs.
 
@@ -24,7 +24,8 @@ load solver_predata
           smoothMesh,...            % Mesh data structure
           materialList,...          % Cell array of all materials
           materialAssignment,...    % Cell array assigning materials to faces
-          simProps);                % Simulation properties
+          simProps, ...             % Simulation properties
+          1.5);                     % Current simulation frequency (in project units)
 
 
 

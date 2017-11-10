@@ -6,6 +6,8 @@ close all
 modelerPath = './Modeler_2D';
 mesherPath = '/home/gadi/Repositories/mesh2d';
 meshWrapperPath = './Mesh_2D';
+solverPath = './Solver_2D';
+
 
 %% Mesher parameters
 % Set printout/no printout
@@ -31,6 +33,7 @@ boundingBoxAddSpace = 0.125;
 addpath(modelerPath);
 addpath(mesherPath);
 addpath(meshWrapperPath);
+addpath(solverPath);
 
 % Define mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
@@ -38,7 +41,8 @@ meshProps = mesh2D_createMeshPropsStruct(...
               'boundingBoxAddSpace',boundingBoxAddSpace);
 
 % Define simulation properties
-simProps = cem2D_createSimPropsStruct('fMin',fMin,'fMax',fMax);
+simProps = cem2D_createSimPropsStruct('fMin',fMin,'fMax',fMax,...
+                                      'polarizationType','TE');
               
 % Create the default material
 defaultMaterial = cem2D_createMaterialDefs;
@@ -194,3 +198,4 @@ hold off;
 rmpath(modelerPath);
 rmpath(mesherPath);
 rmpath(meshWrapperPath);
+rmpath(solverPath);

@@ -21,6 +21,11 @@ narg = numel(varargin);
 if ~~mod(narg,2)
   error('Attributes and values should come in pairs');
 end
+% Break condition
+if narg == 0
+  return;
+end
+
 
 % For validation of inputs
 validParams = fieldnames(meshPropStruct);
