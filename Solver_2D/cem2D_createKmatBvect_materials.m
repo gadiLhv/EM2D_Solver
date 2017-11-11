@@ -7,6 +7,7 @@ function [K,b] = cem2D_createKmatBvect_materials(meshData,materialList,materialA
 % 2. materialList - Cell array with all the material data structures.
 % 3. materialAssign - Material assignements per face (object).
 % 4. simProps - General simulation properties
+% 5. f_sim - Frequency (in simulation units) of current solution
 
 c0 = physical_constant('speed of light in vacuum');
 e0 = physical_constant('electric constant');
@@ -16,9 +17,6 @@ m0 = physical_constant('mag. constant');
 c0 = units('m/sec',[simProps.lengthUnits '*' simProps.freqUnits],c0);
 % Calculate wave number
 k0 = 2*pi*f_sim/c0;
-
-% For future use, extract the node number pairs consisting of all of the EDGE nodes
-edgeCouples = meshData.etri;
 
 nVerts = size(meshData.vert,1);
 
@@ -40,39 +38,29 @@ for faceIdx = 1:numel(meshData.face)
   % Store all triplets 
   triTriplets = meshData.tria(triBinMap,:);
   
-  % Recover all edge nodes corresponding to the
-  % extracted triangles:
-  % 1. Determine if either of the edge nodes is present in a triangle
-  edgeNode1map = bsxfun(@eq,edgeCouples(:,1),permute(triTriplets,[3 1 2]));
-  edgeNode2map = bsxfun(@eq,edgeCouples(:,2),permute(triTriplets,[3 1 2]));
-  
-  % 2. Determine if both of them are present in a triangle
-  areBothNodesIn = max(edgeNode1map,[],3) & max(edgeNode2map,[],3);
-  
-  % 3. Extract only nodes that consist an edge in this face.
-  [edgesInFace,~] = find(areBothNodesIn);
-  edgePairs = meshData.etri(edgesInFace,:);
+  % Find edge node pairs in this set of triangles.
+  edgePairs = cem2D_findEdgeNodes(triTriplets,meshData.etri);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  figure;
-  patch('faces',triTriplets,...
-        'vertices',meshData.vert, ...
-        'facecolor',[1.,1.,1.], ...
-        'edgecolor',[0,0,0]) ;
-  hold on; 
-  axis image off;
-  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
-  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
-  plot(edgesX,edgesY,'-','linewidth',3);
-  hold off;
+%  figure;
+%  patch('faces',triTriplets,...
+%        'vertices',meshData.vert, ...
+%        'facecolor',[1.,1.,1.], ...
+%        'edgecolor',[0,0,0]) ;
+%  hold on; 
+%  axis image off;
+%  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
+%  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
+%  plot(edgesX,edgesY,'-','linewidth',3);
+%  hold off;
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % According to the polarization, build the coefficients.
-  switch polarizationType.simProps
+  switch simProps.polarizationType
     case 'TE'
       ax = ay = 1/er;
       beta = mr*k0^2;
@@ -83,10 +71,11 @@ for faceIdx = 1:numel(meshData.face)
       error('''TEM'' currently not supported');
   end
   
-  [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert,tri);
+  % Create interpolants for elements
+  [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(meshData.vert,triTriplets);
   
+  % Initialize triangle element sub-matrices
   ke = zeros([3 3 size(c,1)]);
-
   for i = 1:3
     for j = 1:3
         ke(i,j,:) = ((4*Det).^(-1)).*(ax.*b(:,i).*b(:,j) + ...
@@ -94,11 +83,13 @@ for faceIdx = 1:numel(meshData.face)
     end
   end
 
-  % Add the elements from the local Ke matrices
+  % Add the elements from the local triangle element sub matrices
   for e = 1:size(ke,3)
-      vert = [triTriplets(e,1) triTriplets(e,2) triTriplets(e,3)];
-      K(vert,vert) = K(vert,vert) + ke(:,:,e);
+      vIdxs = [triTriplets(e,1) triTriplets(e,2) triTriplets(e,3)];
+      K(vIdxs,vIdxs) = K(vIdxs,vIdxs) + ke(:,:,e);
   end
+  
+  
 end
 
 
