@@ -26,7 +26,6 @@ nVerts = size(meshData.vert,1);
 % Initial FEM matrix and source vector
 K = zeros([1 1]*nVerts);
 b = zeros([nVerts 1]);
-  
 
 % Get relative permiability and permittivity
 mr = cMaterialProps.mr;
@@ -53,12 +52,12 @@ isOnEdge =  (inTH(Rpairs1(:,1),xRange(1),distTH) & inTH(Rpairs2(:,1),xRange(1),d
             (inTH(Rpairs1(:,1),xRange(2),distTH) & inTH(Rpairs2(:,1),xRange(2),distTH)) | ...
             (inTH(Rpairs1(:,2),yRange(1),distTH) & inTH(Rpairs2(:,2),yRange(1),distTH)) | ...
             (inTH(Rpairs1(:,2),yRange(2),distTH) & inTH(Rpairs2(:,2),yRange(2),distTH));
-% 4. Extract only outer edge pairs
+% 4. Extract only outer edge pairscem2D_findEdgeNodes
 edgePairs = edgePairs(isOnEdge,:);
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Debug: paint triangles and faces %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  figure;
 %  patch('faces',triTriplets,...
 %        'vertices',meshData.vert, ...
@@ -69,20 +68,43 @@ edgePairs = edgePairs(isOnEdge,:);
 %  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
 %  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
 %  plot(edgesX,edgesY,'-','linewidth',3);
-%  hold off;       'facecolor',[1.,1.,1.], ...
-        'edgecolor',[0,0,0]) ;
-  hold on; 
-  axis image off;
-  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
-  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
-  plot(edgesX,edgesY,'-','linewidth',3);
-  hold off;
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  hold off;       
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Debug: paint triangles and faces %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Calculate absoulte distance from 
+rho1 = meshData.vert(edgePairs(:,1),:);
+rho2 = meshData.vert(edgePairs(:,2),:);
+
+% Calculate Kappa coefficients for 'gamma1\2'
+kappa = 1./[sqrt(sum(rho1.^2,2)) sqrt(sum(rho2.^2,2))];
+
+% Calculate average gamma values
+gamma1 = 1i*k0 + kappa/2 - 1i*(kappa.^2)./(8*(1i*kappa - k0));
+gamma2 = -1i./(2*(1i*kappa - k0));
   
-%% Create interpolants for elements
-%[a,b,c,Det] = cem2D_createInterpolantCoeffs1st(meshData.vert,triTriplets);
+gamma1 = 0.5*sum(gamma1,2);
+gamma2 = 0.5*sum(gamma2,2);
+
+% Calculate segment lengths
+l_s = sqrt(sum((rho2 - rho1).^2,2));
+
+% Construct sub matrice2s
+Ks = cat(3,[(gamma1.*l_s/3 + gamma2./l_s) (gamma1.*l_s/6 - gamma2./l_s)],...
+           [(gamma1.*l_s/6 - gamma2./l_s) (gamma1.*l_s/3 + gamma2./l_s)]);
+
+
+% Transform both matrices to matrix batches
+Ks = permute(Ks,[3 2 1]);
+
+
+% Add the elements from the local Ks matrics
+for edgeIdx = 1:size(Ks,3)
+    vertIdx = edgePairs(edgeIdx,:);
+    K(vertIdx,vertIdx) = K(vertIdx,vertIdx) + Ks(:,:,edgeIdx);
+end
+
 
 
 
