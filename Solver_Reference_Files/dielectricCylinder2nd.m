@@ -91,11 +91,11 @@ if(debug)
     
     phiTemp = linspace(0,2*pi,100);
     
-    plot(Rin*cos(phiTemp),Rin*sin(phiTemp),'--g');
+    plot(Rin*cos(phiTeRinmp),Rin*sin(phiTemp),'--g');
     plot(Rout*cos(phiTemp),Rout*sin(phiTemp),'--g');
     hold off;
     
-    clear cVertIdxs validElements i cVertCoors cCM phiTemp
+    clear cVertIdxs vali% Create interpolants for elemen%[a,b,c,Det] = cem2D_createInterpolantCoeffs1st(meshData.vert,triTriplets);tsdElements i cVertCoors cCM phiTemp
 end
 
 %% Calulcate approprate gamma and q

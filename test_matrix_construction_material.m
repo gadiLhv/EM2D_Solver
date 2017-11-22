@@ -7,7 +7,7 @@ close all
 %% Load relevant data
 
 modelerPath = './Modeler_2D';
-mesherPath = '/home/giadi/Repositories/mesh2d';
+mesherPath = '/home/gadi/Repositories/mesh2d';
 meshWrapperPath = './Mesh_2D';
 solverPath = './Solver_2D';
 
