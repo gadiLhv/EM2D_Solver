@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?taskcoach release="1.3.36" tskversion="37"?>
+
+<tasks>
+<task creationDateTime="2017-11-25 19:00:15.179531" id="1b88a792-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:00:33.563707" status="1" subject="GUI">
+<task creationDateTime="2017-11-25 19:00:23.773858" id="20a806be-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:00:25.377422" status="1" subject="Modeler GUI" />
+<task creationDateTime="2017-11-25 19:00:27.226161" id="22b6d0b6-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:00:31.745410" status="1" subject="Solver parameters GUI" />
+<task creationDateTime="2017-11-25 19:00:33.562946" id="267dbb38-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:00:38.697578" status="1" subject="Graphic output GUI" />
+</task>
+<task creationDateTime="2017-11-25 18:55:08.742897" expandedContexts="('taskviewer',)" id="64e222d4-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:14.717751" priority="2" status="1" subject="Matrix builder">
+<task actualstartdate="2017-11-27 21:28:30.296937" creationDateTime="2017-11-25 18:55:23.794172" id="6ddac4cc-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-27 21:28:30.296700" priority="3" status="1" subject="Finite conductivity boundary conditions" />
+<task creationDateTime="2017-11-25 18:55:27.295511" id="6ff10adc-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:03.107250" priority="2" status="1" subject="Full support for TE\TM" />
+<task creationDateTime="2017-11-25 18:55:34.461998" id="74368a72-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:55:39.441413" status="1" subject="Support for TEM" />
+<task creationDateTime="2017-11-25 18:55:41.205471" id="783b83b6-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:55.891317" priority="2" status="1" subject="Plane wave infusion (radiation B.Cs)" />
+<task creationDateTime="2017-11-25 18:55:47.652554" id="7c1342b2-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:09.540281" priority="1" status="1" subject="Arbitrary field infusion (P.W. spectrum or numerical data)" />
+<task creationDateTime="2017-11-25 18:55:55.156734" id="808c5310-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:56:03.593580" status="1" subject="Port infusion: infinite wires, infinite planes, etc. (Dirichlet B.Cs.)" />
+<task creationDateTime="2017-11-25 18:56:05.861006" id="86edab32-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:56:13.561597" status="1" subject="Waveguide port infusion: Including multimode. Might require 1-D solver" />
+<task creationDateTime="2017-11-25 18:56:15.617850" id="8cbe6e16-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:58.475877" priority="1" status="1" subject="Ferrimagnetic conductors" />
+<task creationDateTime="2017-11-25 18:56:22.843807" id="910d0482-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:53.011462" priority="2" status="1" subject="Infusion scale handler (Dirichlet B.Cs.)" />
+<task creationDateTime="2017-11-25 18:56:33.891317" id="97a2bdc8-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:57:12.590589" status="1" subject="Far future">
+<task creationDateTime="2017-11-25 18:56:41.407067" id="9c1d9120-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:56:43.273302" status="1" subject="PML" />
+<task creationDateTime="2017-11-25 18:56:57.181501" id="a5848a0c-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:56:58.881466" status="1" subject="Static problems" />
+<task creationDateTime="2017-11-25 18:57:04.570605" id="a9ec0796-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:57:06.081431" status="1" subject="Curved mesh, higher order basis functions" />
+<task creationDateTime="2017-11-25 18:57:12.589966" id="aeb3ae3c-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:57:14.601147" status="1" subject="Unisotropic materials (bad idea for 2D solvers)" />
+</task>
+</task>
+<task creationDateTime="2017-11-25 18:49:37.448987" expandedContexts="('prerequisiteviewerintaskeditor',)" id="9f6d65ea-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:14.717751" priority="2" status="1" subject="Modeler">
+<task creationDateTime="2017-11-25 18:50:05.862009" id="b05bffd8-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:55.923806" priority="1" status="1" subject="Curve handling" />
+<task creationDateTime="2017-11-25 18:50:43.414764" expandedContexts="('taskviewer',)" id="c6bc4206-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:53.148158" priority="1" status="1" subject="Circle handling" />
+<task creationDateTime="2017-11-25 18:50:59.146865" id="d01cc9a6-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:55.260677" priority="1" status="1" subject="Curve boolean operations" />
+<task creationDateTime="2017-11-25 18:51:08.925917" id="d5f0f33e-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:51.260280" priority="1" status="1" subject="Consider adding material definitios while creating the polygons" />
+<task creationDateTime="2017-11-25 18:51:22.221252" id="ddddaa9c-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:51:27.708095" status="1" subject="Far future">
+<task creationDateTime="2017-11-25 18:51:27.707263" id="e122c35e-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:51:32.545469" status="1" subject="Splines" />
+</task>
+</task>
+<task creationDateTime="2017-11-25 18:57:25.134886" expandedContexts="('taskviewer',)" id="b62de7a4-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:14.717751" priority="2" status="1" subject="Solver">
+<task creationDateTime="2017-11-25 18:57:31.750224" id="ba1f4dee-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:42.250697" priority="2" status="1" subject="Full support for TE\TM (correct field outputs)" />
+<task creationDateTime="2017-11-25 18:57:52.394825" id="c66d6d2e-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:28.036446" priority="1" status="1" subject="Support for TEM" />
+<task creationDateTime="2017-11-25 18:57:59.359519" id="ca942aaa-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:37.268083" priority="2" status="1" subject="Calculate all 6 fields, even if zeros, for all polarizations" />
+<task creationDateTime="2017-11-25 18:58:08.145312" id="cfd0c320-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:45.395853" priority="2" status="1" subject="Scattering problems (i.e. plane wave, arbitrary external field)" />
+<task creationDateTime="2017-11-25 18:58:15.205094" id="d405fdc0-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:26.052178" priority="1" status="1" subject="Port infusion S-parameters" />
+<task creationDateTime="2017-11-25 18:58:24.284880" id="d96f750c-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:32.780083" priority="1" status="1" subject="Waveguide port S-parameters" />
+<task creationDateTime="2017-11-25 18:58:31.753278" id="dde30b76-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:04:30.644088" priority="1" status="1" subject="Implement C.G. for matrix solution" />
+</task>
+<task creationDateTime="2017-11-25 18:51:36.373754" expandedContexts="('prerequisiteviewerintaskeditor', 'taskviewer')" id="e64d2cd4-d200-11e7-9d64-10feed18a194" modificationDateTime="2017-11-27 21:07:18.915870" priority="2" status="1" subject="Mesher">
+<task creationDateTime="2017-11-25 18:52:22.349985" id="01b49534-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-27 21:07:06.611815" priority="3" status="1" subject="Add handler for metallic objects (no mesh)" />
+<task actualstartdate="2017-11-27 21:07:27.386229" completiondate="2017-11-27 21:20:42.276258" creationDateTime="2017-11-25 18:52:30.222444" id="0665d2fa-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-27 21:20:42.276024" percentageComplete="100" priority="3" status="1" subject="Make sure mesh density is set according to &quot;worse case&quot; refractive index" />
+<task creationDateTime="2017-11-25 18:52:45.048315" id="0f3c11dc-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:45.964431" priority="3" status="1" subject="Set procedure for material list" />
+<task creationDateTime="2017-11-25 18:52:55.907665" id="15b5154a-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:03:41.468134" prerequisites="b05bffd8-d200-11e7-9d64-10feed18a194 d01cc9a6-d200-11e7-9d64-10feed18a194" priority="3" status="1" subject="Meshing parameters for curves" />
+<task creationDateTime="2017-11-25 18:53:31.197953" id="2abdf34e-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:53:43.577764" status="1" subject="Far Future">
+<task creationDateTime="2017-11-25 18:53:03.222583" id="1a113d9e-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:53:10.321358" status="1" subject="Explore different mesher algorithms" />
+<task creationDateTime="2017-11-25 18:53:27.223794" id="285f8a54-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 18:53:29.216927" status="1" subject="Curved mesh: 2nd order basis functions" />
+</task>
+</task>
+<task creationDateTime="2017-11-25 18:59:09.126416" id="f429bcf4-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:02:36.123797" priority="1" status="1" subject="Graphic output">
+<task creationDateTime="2017-11-25 18:59:35.646655" id="03f867de-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:05:06.891892" priority="1" status="1" subject="Fields - Abs. Vector, per-element" />
+<task creationDateTime="2017-11-25 18:59:45.515726" id="09da51f8-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:05:07.813656" priority="1" status="1" subject="Farfield - Directivity, Gain, etc." />
+<task creationDateTime="2017-11-25 19:00:02.852456" id="142fad1a-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:05:07.341775" priority="1" status="1" subject="Currents - Abs. Vector, per-element" />
+<task creationDateTime="2017-11-25 18:59:15.785297" expandedContexts="('taskviewer',)" id="f821cb26-d201-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:05:06.010979" priority="1" status="1" subject="S-Parameters">
+<description>
+S-Parameters
+</description>
+<task creationDateTime="2017-11-25 18:59:30.018204" id="009d9384-d202-11e7-9d64-10feed18a194" modificationDateTime="2017-11-25 19:05:05.036229" priority="1" status="1" subject="Smith" />
+</task>
+</task>
+<syncmlconfig>
+<TaskCoach-0000015ff4151067a38aae63007f000000010001>
+<spds>
+<sources>
+<TaskCoach-0000015ff4151067a38aae63007f000000010001.Tasks />
+<TaskCoach-0000015ff4151067a38aae63007f000000010001.Notes />
+</sources>
+<syncml>
+<Auth />
+<Conn />
+</syncml>
+</spds>
+</TaskCoach-0000015ff4151067a38aae63007f000000010001>
+</syncmlconfig>
+<guid>
+0000015ff4151067a38aae63007f000000010001
+</guid>
+</tasks>

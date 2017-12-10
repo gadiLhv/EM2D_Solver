@@ -1,13 +1,16 @@
-function [K,b] = cem2D_createKmatBvect_materials(meshData,materialList,materialAssign,simProps,f_sim)
-% Creates an initial matrix batch using only dielectric and ferrimagnetic
-% properties of the medium. This formulation is relevant for TM(Z) polarization
-%
+function [K,b] = cem2D_createKmatBvect_metals(meshData,materialList,materialAssign,simProps,f_sim)
+
+% Creates an initial matrix batch using only conducting metals
+% Initially only uses surface impedance approximation (see application note ...)
+% TBD: Calculate skin depth and use volume resistance instead
+
 % Inputs: 
 % 1. meshData - Structure with all of the mesh data
 % 2. materialList - Cell array with all the material data structures.
 % 3. materialAssign - Material assignements per face (object).
 % 4. simProps - General simulation properties
 % 5. f_sim - Frequency (in simulation units) of current solution
+
 
 c0 = physical_constant('speed of light in vacuum');
 e0 = physical_constant('electric constant');
@@ -18,27 +21,27 @@ c0 = units('m/sec',[simProps.lengthUnits '*' simProps.freqUnits],c0);
 % Calculate wave number
 k0 = 2*pi*f_sim/c0;
 
+
 nVerts = size(meshData.vert,1);
 
 % Initial FEM matrix and source vector
 K = zeros([1 1]*nVerts);
 b = zeros([nVerts 1]);
-  
+
 % Build matrix face by face
 for faceIdx = 1:numel(meshData.face)
   % Extract current parts material properties
   cMaterialProps = cem2D_getMaterialPropsFromName(materialAssign{faceIdx},materialList);
   
-  
-  % If this specific face is metal, continue
-  if(strcmp(cMaterialProps.type,'metal'))
+  % If this specific face is dielectric\ferrimagnetic, continue
+  if(strcmp(cMaterialProps.type,'normal'))
     continue;
   end
   
-  % Get relative permiability and permittivity
-  mr = cMaterialProps.mr;
-  er = cMaterialProps.er;
-  
+  % Convert material conductance to project units.
+  sigma = units('ohm/m',['ohm' '/' simProps.lengthUnits],cMaterialProps.mr);
+  % Calculate surface impedance and skin depth
+  Zs = (1+1i)*sqrt(
   % Recover all triangles relevant to current face
   triBinMap = meshData.tnum == faceIdx;
   % Store all triplets 
@@ -81,7 +84,7 @@ for faceIdx = 1:numel(meshData.face)
   % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-  % According to the polarization, build the coefficients.
+    % According to the polarization, build the coefficients.
   switch simProps.polarizationType
     case 'TE'
       ax = ay = 1/er;
@@ -93,27 +96,4 @@ for faceIdx = 1:numel(meshData.face)
       error('''TEM'' currently not supported');
   end
   
-  % Create interpolants for elements
-  [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(meshData.vert,triTriplets);
-  
-  % Initialize triangle element sub-matrices
-  Ke = zeros([3 3 size(c,1)]);
-  for i = 1:3
-    for j = 1:3
-        Ke(i,j,:) = ((4*Det).^(-1)).*(ax.*b(:,i).*b(:,j) + ...
-                    ay.*c(:,i).*c(:,j)) + (Det/12).*beta.*(1 + (i == j));
-    end
-  end
-
-  % Add the elements from the local triangle element sub matrices
-  for e = 1:size(ke,3)
-      vIdxs = [triTriplets(e,1) triTriplets(e,2) triTriplets(e,3)];
-      K(vIdxs,vIdxs) = K(vIdxs,vIdxs) + Ke(:,:,e);
-  end
-  
-  
-end
-
-
-
 end

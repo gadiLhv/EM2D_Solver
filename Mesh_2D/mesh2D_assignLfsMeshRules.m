@@ -58,6 +58,7 @@ for faceIdx = 1:numel(face)
   
   % For each of these vertices, match a new maximum edge length.
   cHlfs = hlfs(vertIdx);
+  % For each face, make sure this is the maximum refractive index mesh rule.
   cHlfs = min(cHlfs,edgeMax(faceIdx));
   hlfs(vertIdx) = cHlfs;
   
