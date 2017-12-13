@@ -34,38 +34,23 @@ for faceIdx = 1:numel(meshData.face)
   cMaterialProps = cem2D_getMaterialPropsFromName(materialAssign{faceIdx},materialList);
   
   % If this specific face is dielectric\ferrimagnetic, continue
-  if(strcmp(cMaterialProps.type,'normal'))
+  if(strcmp(cMaterialProps.type,'metal'))
     continue;
   end
   
+  
   % Convert material conductance to project units.
-  sigma = units('ohm/m',['ohm' '/' simProps.lengthUnits],cMaterialProps.mr);
-  % Calculate surface impedance and skin depth
-  Zs = (1+1i)*sqrt(
+  sigma = cMaterialProps.cond_e;
+
   % Recover all triangles relevant to current face
   triBinMap = meshData.tnum == faceIdx;
   % Store all triplets 
   triTriplets = meshData.tria(triBinMap,:);
   
-  % Find edge node pairs in this set of 
-  % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  figure;
-%  patch('faces',triTriplets,...
-%        'vertices',meshData.vert, ...
-%        'facecolor',[1.,1.,1.], ...
-%        'edgecolor',[0,0,0]) ;
-%  hold on; 
-%  axis image off;
-%  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
-%  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
-%  plot(edgesX,edgesY,'-','linewidth',3);
-%  hold off;
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%triangles.
+  
+  % Find edge node pairs in this set of triangles.
   edgePairs = cem2D_findEdgeNodes(triTriplets,meshData.etri);
-  cem2D_createKmatBvect_2ndOrderRadCond
+  
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -84,16 +69,44 @@ for faceIdx = 1:numel(meshData.face)
   % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
-    % According to the polarization, build the coefficients.
+  % Convert to MKS so Zs_norm will be unitless
+  f_mks = units(simProps.freqUnits,'Hz',f_sim);
+  
+  
+  % Equation to follow: d(Ez;Hz)_z/dn = j*k0*((mr/eta);(er*eta))*(Ez;Hz)
+  % Alpha coefficients are one
+  ax = ay = 1;
+  
+  
+  % According to the polarization, build the coefficients.
   switch simProps.polarizationType
     case 'TE'
-      ax = ay = 1/er;
-      beta = mr*k0^2;
+      Zs_norm = (1+1i)*sqrt(sigma./(2*pi*f_mks./e0));
+      gamma = -1i*k0*er*Zs_norm;
     case 'TM'
-      ax = ay = 1/mr;
-      beta = er*k0^2;
+      Zs_norm = 1./((1+1i)*sqrt(sigma./(2*pi*f_mks./e0)));
+      gamma = -1i*k0*mr*Zs_norm;
     case 'TEM'
       error('''TEM'' currently not supported');
   end
+  
+  
+  % Create interpolants for elements
+  ls = cem2D_createEdgeInterpolantCoeffs1st(meshData.vert,edgePairs);
+  
+  % Initialize triangle element sub-matrices
+  Ks = zeros([2 2 size(ls,1)]);
+  for i = 1:2
+    for j = 1:2
+        Ks(i,j,:) = (gamma*ls/6).*(1 + (i == j));
+    end
+  end
+
+  % Add the elements from the local triangle element sub matrices
+  for s = 1:size(Ks,3)
+      vIdxs = [edgePairs(s,1) edgePairs(s,2)];
+      K(vIdxs,vIdxs) = K(vIdxs,vIdxs) + Ks(:,:,s);
+  end
+  
   
 end
