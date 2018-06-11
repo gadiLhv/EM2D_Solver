@@ -1,0 +1,122 @@
+% %
+% LAYOUT_E.TEX - Short description of REFMAN.CLS
+%                                       99-03-20
+%
+%  Updated for REFMAN.CLS (LaTeX2e)
+%
+\documentclass[twoside,a4paper]{refart}
+\usepackage{makeidx}
+\usepackage{ifthen}
+\usepackage{amsmath,amssymb} 			% Additional math sym, eq
+% ifthen wird vom Bild von N.Beebe gebraucht!
+
+\def\bs{\char'134 } % backslash in \tt font.
+\newcommand{\ie}{i.\,e.,}
+\newcommand{\eg}{e.\,g..}
+\DeclareRobustCommand\cs[1]{\texttt{\char`\\#1}}
+
+\title{EM2D-Solver}
+\author{Gadi Lahav and Darren Engwirda}
+
+\date{}
+\emergencystretch1em  %
+
+\pagestyle{myfootings}
+\markboth{Changing the layout with \textrm{\LaTeX}}%
+         {Changing the layout with \textrm{\LaTeX}}
+
+\makeindex 
+
+\setcounter{tocdepth}{2}
+
+%%%%%%%%%%%%%%%%%
+% Abbreviations %
+%%%%%%%%%%%%%%%%%
+
+\newcommand{\fem}{\textbf{FEM}}
+\newcommand{\fd}{\textbf{FD}}
+\newcommand{\te}{\textbf{TE}}
+\newcommand{\tm}{\textbf{TM}}
+\newcommand{\bc}{\textbf{BC}}
+
+%%%%%%%%%%%%%%%%%
+% Abbreviations %
+%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%
+% Math commands %
+%%%%%%%%%%%%%%%%%
+
+\newcommand{\Ef}{\mathbf{E}}
+\newcommand{\Hf}{\mathbf{H}}
+\newcommand{\Df}{\mathbf{D}}
+\newcommand{\Bf}{\mathbf{B}}
+\newcommand{\Jc}{\mathbf{J}}
+
+\newcommand{\er}{{\epsilon_rs}}
+\newcommand{\mr}{{\mu_r}}
+
+\newcommand{\dx}{\partial_x}
+\newcommand{\dy}{\partial_y}
+\newcommand{\dz}{\partial_z}
+\newcommand{\dn}{\partial_n}
+\newcommand{\ds}{\partial_s}
+
+\newcommand{\nx}{\hat{x}}
+\newcommand{\ny}{\hat{y}}
+\newcommand{\nz}{\hat{z}}
+\newcommand{\nn}{\hat{n}}
+
+% All sort of braces
+\newcommand{\brr}[1]{\left({#1}\right)}
+\newcommand{\brs}[1]{\left[{#1}\right]}
+\newcommand{\brc}[1]{\{{#1}\}}
+\newcommand{\abs}[1]{\left|{#1}\right|}
+
+%%%%%%%%%%%%%%%%%
+% Math commands %
+%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+	CEM 2D solver
+\end{abstract}
+
+
+
+\tableofcontents
+
+\newpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Solver}
+\label{sec:Solver}
+
+\input{./Solver/Solver.tex}
+
+\subsection{Electromagnetic Problem}
+\label{subsec:EM problem}
+\input{./Solver/EM_Problem.tex}
+
+\subsection{2D FEM Formulation}
+\label{subsec:FEM formulation}
+\input{./Solver/FEM_2D.tex}
+
+\subsection{Material Definitions}
+\label{subsec:Material Definitions}
+\input{./Solver/Material_Defs.tex}
+
+\subsection{Radiation Boundary Conditions}
+\label{subsec:Radiation BCs}
+\input{./Solver/Radiation_BC.tex}
+
+
+\printindex
+
+\end{document}

@@ -1,0 +1,166 @@
+\subsubsection{Operator and \bc}
+\label{ssubsec:Operator and bc}
+The general boundary value problem to be resolved is $\mathcal{L}\phi = f$, explicitly given by
+\begin{equation}
+\label{eq:Strum-Liouville 2D}
+-\dx\brr{\alpha_x\dx\phi}
+-\dy\brr{\alpha_y\dy\phi}
++ \beta \phi = f.
+\end{equation}
+In addition, two \bc s are defined. Dirichlet \bc
+\begin{equation}
+\label{eq:Dirichlet BC}
+\left.{\phi}\right|_{@\Gamma_1} = p
+\end{equation}
+and Neumann \bc,
+\begin{equation}
+\label{eq:Neumann BC}
+\brr{
+	\alpha_x \dx\phi \nx
+	+
+	\alpha_y \dy\phi \ny
+	}\cdot \nn
++ \gamma\phi = q \,\,\, @ \,\Gamma_2.
+\end{equation}
+
+If there is no discontinuity at an interface $\Gamma_d$, we demand that $\phi$ satisfies the continuity condition
+\begin{equation}
+\label{eq:Cont BC}
+\phi^+ = \phi^- 
+\end{equation}
+and the corresponding derivative continuity (smoothness)
+\begin{equation}
+\label{eq:Smoothness BC}
+\brr{
+	\alpha_x^+ \dx\phi^+\nx
+	+
+	\alpha_y^+ \dy\phi^+\ny
+}\cdot\nn
+=
+\brr{
+	\alpha_x^- \dx\phi^-\nx
+	+
+	\alpha_y^- \dy\phi^-\ny
+}\cdot\nn.
+\end{equation}
+
+\subsubsection{Basis Functions}
+\label{ssubsec:Basis functins}
+
+Inside the triangular element $e$, the linear interpolated field $\phi$ is given by
+
+\begin{equation}
+\label{eq:Field 1st order interp}
+\phi^e \brr{x,y} = 
+a^e + b^e x + c^e y.
+\end{equation}
+
+In order to determine the coefficients for the $e^{th}$ element, field values at the three nodes $\brr{x_j,y_j}\,;\,\,j=1,2,3$ must be known. Then, the three equations
+\begin{subequations}
+\label{eq:Linear interp coeff eq system}
+\begin{equation}
+\phi_1^e = a^e + b^e x_1^e + c^e y_1^e
+\end{equation}
+\begin{equation}
+\phi_2^e = a^e + b^e x_2^e + c^e y_2^e 
+\end{equation}
+\begin{equation}
+\phi_3^e = a^e + b^e x_3^e + c^e y_3^e
+\end{equation}
+\end{subequations}
+can be used to determine the values inside the element, using the expression
+
+\begin{subequations}
+\label{eq:Explicit linear interpolation}
+\begin{equation}
+\phi^e\brr{x,y} = \sum\limits_{j = 1}^3
+{
+	N_j^e\brr{x,y}\phi_j^e
+}
+\end{equation}
+where
+\begin{equation}
+N_j^e\brr{x,y} = \frac{1}{2\Delta^e}
+\brr{
+	a_j^e + b_j^e x + c_j^e y
+}
+\end{equation}
+and the coefficients are given explicitly as
+\begin{equation}
+\begin{array}{ccc}
+a_1^e = x_2^e y_2^e - y_2^e x_3^e \,;& 
+b_1^e = y_2^e - y_3^e \,;& 
+c_1^e = x_3^e - x_2^e \,;\\
+
+a_2^e = x_3^e y_1^e - y_3^e x_1^e \,;& 
+b_2^e = y_3^e - y_1^e \,;& 
+c_2^e = x_1^e - x_3^e \,;\\
+
+a_3^e = x_1^e y_2^e - y_1^e x_2^e \,;& 
+b_3^e = y_1^e - y_2^e \,;& 
+c_3^e = x_2^e - x_1^e \\
+\\
+& \Delta^e = \frac{1}{2} 
+\abs{
+\begin{matrix}
+1 & x_1^e & y_1^e \\
+1 & x_2^e & y_2^e \\
+1 & x_3^e & y_3^e
+\end{matrix}
+}
+= \frac{1}{2}\brr{b_1^e c_2^e - b_2^e c_1^e}.
+\end{array}
+\end{equation}
+\end{subequations}
+
+\subsubsection{Ritz Formulation}
+\label{ssubsec:Ritz formulation}
+
+Without boundary conditions of the 2\textsuperscript{nd} and 3\textsuperscript{rd} kind incorporated, the equation system to resolve is given by
+\begin{equation}
+\mathbf{K}\boldsymbol{\phi} = \mathbf{b},
+\end{equation}
+where $\boldsymbol{\phi}=\brc{\phi_n | i = n..N_n}$, $N_n$ being the number of nodes in the simulated domain. The $\mathbf{K}$ matrix elements are given by
+\begin{equation}
+K_{ij} = 
+\sum\limits_{e = 1}^{N_e}{
+	K_{ij}^e
+},
+\end{equation}
+where $N_e$ is the total number of elements. Each part of the series can be calculated as
+\begin{equation}
+K_{ij}^e = 
+\frac{1}{4\Delta^e}\brr{
+	\alpha_x^e b_i^e b_j^e + \alpha_y^e c_i c_j
+}
++ 
+\frac{\Delta^e}{12}\beta^e\brr{1 + \delta_{ij}}.
+\end{equation}
+The $\mathbf{b}$ vector elements are similarly given by
+\begin{equation}
+b_i = \sum\limits_{e = 1}^{N_e}{
+	b_{i}^e
+},
+\end{equation}
+where each addition is given by
+\begin{equation}
+b_i^e = \frac{\Delta^e}{3} f^e.
+\end{equation}
+
+In case of non-vanishing $\gamma$ and $q$, namely existing Neumann \bc s, the individual segment contributions to $K$ and $b$ need to be taken into consideration, as well. In this case, the 1\textsuperscript{st} order interpolation function is given by
+\begin{equation}
+\phi^s = \sum\limits_{j = 1}^{2}{
+	N_j^s\phi_j^s
+},
+\end{equation}
+where $N_1^s = 1 - \xi$ and $N_2^s = \xi$, while $\xi = \brs{0,1}$. $\phi^s$ denotes the field value in the $s^{th}$ segment. The individual contributions of the $s^{th}$ segment are given by
+\begin{subequations}
+\begin{equation}
+K_{ij}^s = \gamma^s \frac{l^s}{6} \brr{1 + \delta_{ij}},
+\end{equation}
+\begin{equation}
+b_i^s = q^s \frac{l^s}{2}.
+\end{equation}
+\end{subequations} 
+
+

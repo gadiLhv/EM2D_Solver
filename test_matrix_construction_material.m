@@ -35,6 +35,18 @@ simProps.polarizationType = 'TE';
           simProps, ...             % Simulation properties
           1.5);                     % Current simulation frequency (in project units)
 
+
+pwStruct = struct('phiPropagation',0,...  % Phi of propagation direction
+        'amp',1,...             % Amplitude in V/m.
+        'polarizationVect',[1 0],...  % Computed around propagatin axis, in transverse to the computation plane
+        'measurementPl aneDist',0,...  % Phase is zero at this plane. Defaulted in [0,0].
+        'measurementStartingPoint',[0 0],... % Distance is measured from this coordinate
+        );
+          
+pwProps = cem2D_createPlaneWaveInfusionStruct(...
+            'phiPropagation',45)
+cem2D_createPlaneWaveInfusionStruct
+          
 %%
 
 rmpath(modelerPath);

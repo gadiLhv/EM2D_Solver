@@ -1,5 +1,4 @@
-function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,materialList,materialAssign,simProps,f_sim)
-
+function cem2D_createKmatBvect_planeWaveInfusion(meshData,materialList,materialAssign,simProps,f_sim,pwStruct)
 % Inputs: 
 % 1. meshData - Structure with all of the mesh data
 % 2. materialList - Cell array with all the material data structures.
@@ -48,7 +47,7 @@ Rpairs1 = meshData.vert(edgePairs(:,1),:);
 Rpairs2 = meshData.vert(edgePairs(:,2),:);
 % 3. Determine if the pairs are on any of the extemum. Decide with threshold, 
 %    rather than simply comparing. Mesh isn't perfect...
-isOnEdge =  (inTH(Rpairs1(:,1),xRange(1),distTH) & inTH(Rpairs2(:,1),xRange(1),distTH)) | ...
+isOnEdge =  (inTH(Rpairs1(:,1),xRאיילוןange(1),distTH) & inTH(Rpairs2(:,1),xRange(1),distTH)) | ...
             (inTH(Rpairs1(:,1),xRange(2),distTH) & inTH(Rpairs2(:,1),xRange(2),distTH)) | ...
             (inTH(Rpairs1(:,2),yRange(1),distTH) & inTH(Rpairs2(:,2),yRange(1),distTH)) | ...
             (inTH(Rpairs1(:,2),yRange(2),distTH) & inTH(Rpairs2(:,2),yRange(2),distTH));
@@ -65,49 +64,67 @@ edgePairs = edgePairs(isOnEdge,:);
 %        'edgecolor',[0,0,0]) ;
 %  hold on; 
 %  axis image off;
-%  edgesDir = meshData.vert(edgePairs(:,2),:) - meshData.vert(edgePairs(:,1),:);
-%  edgesStart = meshData.vert(edgePairs(:,1),:);  
-%  edgesEnd = meshData.vert(edgePairs(:,2),:);  
-%  
-%  for ei = 1:size(edgesStart,1)
-%    quiver(edgesStart(ei,1),edgesStart(ei,2),edgesDir(ei,1)*0.5,edgesDir(ei,2)*0.5,'-b');
-%  end
-%  hold off;           
+%  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
+%  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
+%  plot(edgesX,edgesY,'-','linewidth',3);
+%  hold off;       
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Debug: paint triangles and faces %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Calculate absoulte distance from 
+% Calculate absoulte distance from origin
 rho1 = meshData.vert(edgePairs(:,1),:);
 rho2 = meshData.vert(edgePairs(:,2),:);
 
-% Calculate Kappa coefficients for 'gamma1\2'
-kappa = 1./[sqrt(sum(rho1.^2,2)) sqrt(sum(rho2.^2,2))];
+% Determine tangent vector (phi)
+dr = rho2 - rho1);
+drAbs = sqrt(sum(dr.^2,2));
+phi = dr./drAbs;
 
-% Calculate average gamma values
-gamma1 = 1i*k0 + kappa/2 - 1i*(kappa.^2)./(8*(1i*kappa - k0));
-gamma2 = -1i./(2*(1i*kappa - k0));
-  
-gamma1 = 0.5*sum(gamma1,2);
-gamma2 = 0.5*sum(gamma2,2);
+kappa = 1./sqrt(sum(rho1.^2,2));
+
+% Determine normal (outer) by performing cross between the Z direction and the 
+% tangent vector.
+n = [-phi(:,2) phi(:,1)];
+
+% In case of plane wave infusion, it is only necessary to calculate the "q" 
+% coefficients, to insert into the 'b' vector.
 
 % Calculate segment lengths
 l_s = sqrt(sum((rho2 - rho1).^2,2));
 
-% Construct sub matrice2s
-Ks = cat(3,[(gamma1.*l_s/3 + gamma2./l_s) (gamma1.*l_s/6 - gamma2./l_s)],...
-           [(gamma1.*l_s/6 - gamma2./l_s) (gamma1.*l_s/3 + gamma2./l_s)]);
+% Calculate explicit propagation direction
+kx = cos(pwStruct.phiPropagation*pi/180);
+ky = sin(pwStruct.phiPropagation*pi/180);
 
 
-% Transform both matrices to matrix batches
-Ks = permute(Ks,[3 2 1]);
+% Freespace impedance
+eta = sqrt(m0*mr./(e0*er));
 
+% Derivate the incident field in both directions
+dphidn = -1i*k0*(kx*n(:,1) + ky*n(:,2)).*exp(-1i*k0*(kx*rho(:,1) + ky*rho(:,2)));
+d2phidphi2 = -(k0^2)*((kx*n(:,1) + ky*n(:,2))^2).*exp(-1i*k0*(kx*rho(:,1) + ky*rho(:,2)));
+% Build q vector
+q = dphidn+ ...
+    [1i*k0 + 0.5*kappa - 1i*kappa.^2./(8*(1i*kappa - k0))) - ...
+    (0.5*1i./(kappa - k0)).*d2phidphi2;
 
-% Add the elements from the local Ks matrics
-for edgeIdx = 1:size(Ks,3)
-    vertIdx = edgePairs(edgeIdx,:);
-    K(vertIdx,vertIdx) = K(vertIdx,vertIdx) + Ks(:,:,edgeIdx);
+    
+switch simProps.polarizationType
+  case 'TE'
+    % First 
+    q = (pwStruct.amp./eta)*q;
+  case 'TM'
+    q = (pwStruct.amp)*q;
+  case 'TEM'
+    error('There is no such thing as a plane wave in ''TEM''');
 end
+  
+% No need to add elements to K matrix because this imposes only sources. 
+% The radiation boundary condtions are handled separately. 
+
+% To the sources vector, however, here it is!
+b(edgePairs(:,1)) = b(edgePairs(:,1)) + q;
 
 
 end

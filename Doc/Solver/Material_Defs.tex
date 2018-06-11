@@ -1,0 +1,47 @@
+\subsubsection{Dielectrics}
+\label{ssubsec:dielectrics}
+Here, $\gamma = 0$, 
+\begin{equation}
+\label{eq:dielectric alpha}
+\alpha_x = \alpha_y = 
+\begin{cases}
+\frac{1}{\epsilon_r}\,, & TE \\
+\frac{1}{\mu_r}\,, & TM
+\end{cases} 
+\end{equation}
+and $\beta = 0$
+
+
+\subsubsection{Lossy Metals}
+\label{ssubsec:lossy_metals}
+For a metallic face, the internal fields do not need to be solved. In such cases (in a RF regime, rather than optical), the edges of the face can be teated as a surface impedance of
+\begin{equation}
+\label{eq:surface impedance for lossy metals}
+Z_s \approx 
+\begin{cases}
+\brr{1 + j}
+\sqrt{
+	\frac{\epsilon_0}
+	{2\pi f}\sigma
+} \,, &  TE \\
+\frac{1}{\brr{1 + j}
+\sqrt{
+	\frac{\epsilon_0}
+	{2\pi f}\sigma}
+} \,,&  TM
+\end{cases},
+\end{equation}
+where $\sigma$ is the metallic conductivity, given in $\omega/m$ and $f$ is the current resolved frequency.
+
+
+The rest of the coefficients for the matrix are then given by $\alpha_x = \alpha_y = 1$, $\beta = 0$ and
+\begin{equation}
+\label{eq:Lossy metal gamma coeff}
+\gamma = 
+\begin{cases}
+-j k_0 \epsilon_r Z_s\,, & TE \\
+-j k_0 \mu_r Z_s\,, & TM
+\end{cases}
+\end{equation}
+
+

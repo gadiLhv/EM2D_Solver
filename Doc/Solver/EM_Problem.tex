@@ -1,0 +1,116 @@
+Maxwells Equation in Frequency Domain (\fd):
+\begin{subequations}
+\label{eq:Maxwells eqs}
+\begin{equation}
+\label{subeq:Faradays law}
+\nabla\times\Ef + j\omega\Bf = 0
+\end{equation}
+\begin{equation}
+\label{subeq:Ampers law}
+\nabla\times\Bf - j\omega\Df = \Jc,
+\end{equation}
+With the constitutive relations
+\begin{equation}
+\label{subeq:Gauss law - E}
+\nabla\cdot\Df = \rho
+\end{equation}
+\begin{equation}
+\label{subeq:Gauss law - H}
+\nabla\cdot\Bf = 0.
+\end{equation}
+\end{subequations}
+
+In addition, the definitions for the flux densities are given by
+\begin{subequations}
+\label{eq:Flux densities}
+\begin{equation}
+\label{subeq:E flux dens}
+\Df = \epsilon\Ef
+\end{equation}
+and
+\begin{equation}
+\label{subeq:H flux dens}
+\Bf = \mu\Hf.
+\end{equation}
+\end{subequations}
+
+For this solver, the Transverse equations used, in order to degenerate the problem into a $z$ infinite problem. The choice of the direction $\nz$ is arbitrary. Hence, the formulations will be called $z$ Transverse Electric and $z$ Transverse Magnetic and denoted by \te~and \tm, respectively.
+
+\begin{subequations}
+\label{eq:Transverse formulations}
+\begin{equation}
+\label{subeq:TE formulation}
+\brs{
+	\dx\brr{
+		\frac{1}{\er}\dx \cdot
+	}
+	+
+	\dy\brr{
+		\frac{1}{\er}\dy \cdot
+		}
+	+ k_0^2\mr
+}
+H_z = 
+-\dx\brr{\frac{1}{\er}J_y}
++\dy\brr{\frac{1}{\er}J_x}
+\end{equation}
+\begin{equation}
+\label{subeq:TM formulation}
+\brs{
+	\dx\brr{
+		\frac{1}{\mr}\dx \cdot
+		}
+	+
+	\dy\brr{
+		\frac{1}{\mr}\dy \cdot
+	}
+	+ k_0^2\er
+}E_z
+= j k_0 Z_0 J_z,
+\end{equation}
+\end{subequations}
+where $Z_0 = \sqrt{\frac{\mu_0}{\epsilon_0}}$ and $k_0 = \omega\sqrt{\epsilon_0\mu_0}$.
+
+
+Some important boundary conditions (\bc s) are:
+\begin{description}
+\item[Impedance \bc s]\index{Impedance bc} This type of boundary condition can be used both for actual finite-conductivity surfaces, or for thin dielectric slabs. In general, the \bc~is phrase as
+\begin{subequations}
+	\label{eq:Impedance BC}
+	\begin{equation}
+	\label{subeq:Impedance BC - TE case}
+	\dn H_z = j k_0 \epsilon_{r_1} \eta H_z
+	\end{equation}
+	for the \te~case, and 
+	\begin{equation}
+	\label{subeq:Impedance BC - TM case}
+	\dn E_z = j k_0 \frac{\mu_{r_1}}{\eta} \eta E_z
+	\end{equation}
+	for the \tm~case.
+\end{subequations}
+
+Here, $eta = \sqrt{\frac{\mu_{r_2}}{\epsilon_{r_2}}}$, where the subscripts 1 and 2 describe the non-conducting and the conducting materials, respectively.
+
+\item[Absorbing \bc s]\index{Absorbing bc} This type of boundary condition is used for scattering problems and simulates an infinite open space. The 1\textsuperscript{st} order \bc~ is given by
+\begin{subequations}
+	\label{eq:Absorbing bc}
+	\begin{equation}
+	\label{subeq:1st order absorbing bc}
+		\dn \phi^s + \brs{j k_0 + \frac{\kappa\brr{s}}{2}} \phi^s = 0
+	\end{equation}
+	and the 2\textsuperscript{nd} order version by 
+	\begin{equation}
+	\label{subeq:2nd order absorbing bc}
+		\frac{\partial \phi^{sc}}{\partial \rho}
+		+ \brs{
+			jk_0 + \frac{1}{2\rho} - \frac{1}{8\rho^2 \brr{\frac{1}{\rho} jk_0}}
+		}\phi^{sc}
+		-
+		\frac{1}{2\rho^2\brr{\frac{1}{\rho} jk_0}}
+		\frac{\partial^2\phi}{\partial s^2}
+	\end{equation}
+\end{subequations}
+\end{description}
+
+Here, $1/\rho(s) = \kappa(s)$ is $s$ parametrized surface curvature. On the surface, the normal derivation $\dn$ can be approximated as radial derivation.
+

@@ -60,25 +60,6 @@ for faceIdx = 1:numel(meshData.face)
 %  hold off;
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%triangles.
-  edgePairs = cem2D_findEdgeNodes(triTriplets,meshData.etri);
-  cem2D_createKmatBvect_2ndOrderRadCond
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Debug: paint triangles and faces %
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  figure;
-%  patch('faces',triTriplets,...
-%        'vertices',meshData.vert, ...
-%        'facecolor',[1.,1.,1.], ...
-%        'edgecolor',[0,0,0]) ;
-%  hold on; 
-%  axis image off;
-%  edgesX = [meshData.vert(edgePairs(:,1),1) meshData.vert(edgePairs(:,2),1)].';
-%  edgesY = [meshData.vert(edgePairs(:,1),2) meshData.vert(edgePairs(:,2),2)].';
-%  plot(edgesX,edgesY,'-','linewidth',3);
-%  hold off;
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % Debug: paint triangles and faces %
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   % According to the polarization, build the coefficients.
@@ -106,7 +87,7 @@ for faceIdx = 1:numel(meshData.face)
   end
 
   % Add the elements from the local triangle element sub matrices
-  for e = 1:size(ke,3)
+  for e = 1:size(Ke,3)
       vIdxs = [triTriplets(e,1) triTriplets(e,2) triTriplets(e,3)];
       K(vIdxs,vIdxs) = K(vIdxs,vIdxs) + Ke(:,:,e);
   end

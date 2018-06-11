@@ -34,7 +34,7 @@ for faceIdx = 1:numel(meshData.face)
   cMaterialProps = cem2D_getMaterialPropsFromName(materialAssign{faceIdx},materialList);
   
   % If this specific face is dielectric\ferrimagnetic, continue
-  if(strcmp(cMaterialProps.type,'metal'))
+  if(~strcmp(cMaterialProps.type,'metal'))
     continue;
   end
   
@@ -84,7 +84,7 @@ for faceIdx = 1:numel(meshData.face)
       Zs_norm = (1+1i)*sqrt(sigma./(2*pi*f_mks./e0));
       gamma = -1i*k0*er*Zs_norm;
     case 'TM'
-      Zs_norm = 1./((1+1i)*sqrt(sigma./(2*pi*f_mks./e0)));
+      Zs_norm = 1./((1+1i)*sqrt(sigma./(2*pi*f_mks./m0)));
       gamma = -1i*k0*mr*Zs_norm;
     case 'TEM'
       error('''TEM'' currently not supported');
