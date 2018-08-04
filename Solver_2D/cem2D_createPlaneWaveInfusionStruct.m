@@ -18,7 +18,7 @@ for argIdx = 1:2:((nargin/2)+1)
   validString = validatestring(varargin{argIdx},validParams);
   % Validate value class
   value = varargin{argIdx+1};
-  requiredClass = class(getfield(simPropStruct,validString));
+  requiredClass = class(getfield(pwStruct,validString));
   givenClass = class(value);
   if(~strcmp(requiredClass,givenClass))
     error(...
@@ -30,17 +30,11 @@ for argIdx = 1:2:((nargin/2)+1)
     value = sprintf('%f',value);
   end
   
-  setfield(simPropStruct,validString,varargin{argIdx+1});
+  setfield(pwStruct,validString,varargin{argIdx+1});
   
   
 end
-  if(~ischar(value))
-    value = sprintf('%f',value);
-  end
-  
-  setfield(simPropStruct,validString,varargin{argIdx+1});
+
   
   
-end
-    
 end

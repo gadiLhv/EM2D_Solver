@@ -1,6 +1,9 @@
-function initMesh = mesh2D_generateInitialMesh(polygonList,materialAssignment,materialProps,meshProps,simProps)
+function initMesh = mesh2D_generateInitialMesh(polygonList,polylineList,materialAssignment,materialProps,meshProps,simProps)
 
-[node,edge,face] = mod2D_polygonToFaceList(polygonList,meshProps.stitchingTolerance);
+[node,edge,face,line,fixes] = mod2D_polygonToFaceList(polygonList,polylineList,meshProps.stitchingTolerance);
+
+% Add port edges to the list (intersect)
+
 maxEdgeL = cem2D_calcMaxEdgeL(polygonList{1});
 
 % Define properties for initial lfs (Crude mesh, no sub-meshing)
@@ -54,7 +57,16 @@ hlfs = lfsStruct.hlfs;
           slfs,...
           hlfs);
           
+% Assign edges to polylines
+[ltri,lnum] = mesh2D_assignEdgesToPolylines(...
+        etri ,...
+        vert,...
+        line,...
+        edge,...
+        node,...
+        meshProps.stitchingTolerance)
 
+          
 % Attach all to single structure          
 initMesh.vlfs = vlfs;
 initMesh.tlfs = tlfs;
@@ -67,5 +79,8 @@ initMesh.vert = vert;
 initMesh.node = node;
 initMesh.edge = edge;
 initMesh.face = face;
+initMesh.line = line;
+initMesh.ltri = ltri;
+initMesh.lnum = lnum;
 
 end

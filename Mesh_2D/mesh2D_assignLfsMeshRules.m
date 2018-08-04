@@ -48,10 +48,10 @@ for faceIdx = 1:numel(face)
   cEdge = edge(cFace,:);
   
   % Now match the vertices from the lfs list to this face
-  [vertIdx,~,~] = mod2D_pointOnEdge(vlfs,...   % All the vertices in the LFS generation
-                                    node,...   % Full node list in the original geometry
-                                    cEdge,...     
-                                    distTH);
+  [vertIdx,~,~,~] = mod2D_pointOnEdge(vlfs,...   % All the vertices in the LFS generation
+                                      node,...   % Full node list in the original geometry
+                                      cEdge,...     
+                                      distTH);
   
   % Dont repeat nodes
   vertIdx = unique(vertIdx);

@@ -83,8 +83,12 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 %pol2 = mod2D_createRectangleStruct([-2.5 1],[-2 2]); % Bad at handling duplicate nodes. Remove them while creating connectivty list
 %pol3 = mod2D_createPolygonStruct([-0.7 0.4 1],[-0.6 -0.8 1]);
 
+% Create edge port line
+line1 = mod2D_createEdgeStruct([-1.5 -1.5]*10,[0.3 0.8]*10);
+
 % Create polygon list
 polList = {pol1,pol2,pol3};
+lineList = {line1};
 
 % Assign materials,er,mr
 materialAssignment = {'plastic310','plastic550','plastic720'};
@@ -123,8 +127,7 @@ polList = [{bBox}  polList];
 % Assign default material to bounding box
 materialAssignment = [{'default'} materialAssignment];
 
-[node,edge,face] = mod2D_polygonToFaceList(polList,meshProps.stitchingTolerance);
-
+%[node,edge,face] = mod2D_polygonToFaceList(polList,meshProps.stitchingTolerance);
 
 %%%%%%%%%
 % Mesh! %
@@ -133,13 +136,14 @@ materialAssignment = [{'default'} materialAssignment];
 % 1. First phase of meas
 initMesh = mesh2D_generateInitialMesh(...
             polList,...             % Entire polygon list. This is mainly to calculate the maximum\minimum edge length
+            lineList,...            % List of lines. Used for porst, mainly.
             materialAssignment,...  % Material assignments for initial LFS assignment
             materialList,...        % Corresponding material properties
             meshProps,...           % Darrens Mesher properties
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
 % 2. Smooth the mesh
-smoothMesh = mesh2D_smoothMesh(initMesh);
+smoothMesh = mesh2D_smoothMesh(initMesh,meshProps);
             
 % Plot initial mesh
 figure('position',[240    165   1053    596]);
@@ -166,7 +170,18 @@ edgeVect1 = initMesh.vert(initMesh.etri(:,1),:);
 edgeVect2 = initMesh.vert(initMesh.etri(:,2),:);
 edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
 edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
-plot(edgeVectX,edgeVectY,'-','linewidth',3);
+plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[0 0 0]);
+
+edgeVect1 = initMesh.vert(initMesh.ltri(:,1),:);
+edgeVect2 = initMesh.vert(initMesh.ltri(:,2),:);
+edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
+edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
+%plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[1 0 0]);
+for segIdx = 1:size(edgeVectX,2)
+  plot([edgeVectX(1,segIdx) edgeVectX(2,segIdx)],...
+       [edgeVectY(1,segIdx) edgeVectY(2,segIdx)],...
+       '-','linewidth',2,'color',[1 0 0]);  
+end
     
 title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(initMesh.tria,1))]) ;
@@ -191,8 +206,27 @@ randColor = rand([1 3]);
 patch('faces',smoothMesh.tria(smoothMesh.tnum == 4,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
+
+edgeVect1 = smoothMesh.vert(smoothMesh.etri(:,1),:);
+edgeVect2 = smoothMesh.vert(smoothMesh.etri(:,2),:);
+edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
+edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
+plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[0 0 0]);
+    
+edgeVect1 = smoothMesh.vert(smoothMesh.ltri(:,1),:);
+edgeVect2 = smoothMesh.vert(smoothMesh.ltri(:,2),:);
+edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
+edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
+%plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[1 0 0]);
+for segIdx = 1:size(edgeVectX,2)
+  plot([edgeVectX(1,segIdx) edgeVectX(2,segIdx)],...
+       [edgeVectY(1,segIdx) edgeVectY(2,segIdx)],...
+       '-','linewidth',2,'color',[1 0 0]);
+end
+
 title(['MESH-Smoothed.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(smoothMesh.tria,1))]) ;
+    
 hold off;
 
 rmpath(modelerPath);
