@@ -9,9 +9,9 @@ try
 [newPol,numberOfLoops] = clipPolygon(polCoors1,...  
                                      polCoors2,...
                                      mod2D_opStrToCode(opString));
-catch
+catch(lasterror)
   % Catch the latest error message like this:
-  lasterror.msg;
+  fprintf(1,'Error: %s\n',lasterror.message);
 end
 % TODO: Support circles
 % TODO: Suuport closed curves
