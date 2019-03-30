@@ -9,7 +9,7 @@ function polStruct = mod2D_createPolygonStruct(X,Y)
 % No need to repeat first coordinate twice
 
 %polStruct = struct('x',[X(:) ; X(1)],'y',[Y(:) ; Y(1)],'nParts',1,'structType','Polygon');
-polStruct = struct('x',X(:),'y',Y(:),'nParts',1,'structType','Polygon');
+polStruct = struct('x',X(:),'y',Y(:),'nParts',sum(isnan(X(:))) + 1,'structType','Polygon');
 
 % TODO: Determine number of loops, and write them in structure
 

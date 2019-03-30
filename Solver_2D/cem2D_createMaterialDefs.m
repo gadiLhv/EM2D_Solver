@@ -5,7 +5,7 @@ materialDef = struct(...
   'name','default',...  % Material name
   'er',1,...            % Relative permittivity
   'mr',1,...            % Relative permiability
-  'type','normal',...   % Could be 'normal' or 'metal'. Namely: Dielectric or metallic
+  'type','normal',...   % Could be 'normal', 'metal', 'PEC' or 'PMC'
   'cond_e',1e20,...     % Electric conductivity - used only in case of metallic. Given in Ohm\m
   'cond_m',1e20,...     % Magnetic conductivity - used only in case of metallic. Given in ??? (TBD)
   'tand_e',0,...        % Dielectric loss tangent - used only in case of normal
@@ -42,7 +42,7 @@ for argIdx = 1:(numel(varargin)/2)
       materialDef.name = argVal;
     case 'type'
       % Valudate 'normal' or 'metal'
-      argVal = validatestring(argVal,{'normal','metal'},'cem2D_createMaterialDefs','type');
+      argVal = validatestring(argVal,{'normal','metal','PEC','PMC'},'cem2D_createMaterialDefs','type');
       materialDef.type = tolower(argVal);
     otherwise
       % Validate numeric

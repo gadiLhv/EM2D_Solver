@@ -29,7 +29,7 @@ end
 validParams = fieldnames(simPropStruct);
 
 % Update all fields
-for argIdx = 1:2:((nargin/2)+1)
+for argIdx = 1:2:(nargin-1)
   % Validate that paramter has the correct name
   validString = validatestring(varargin{argIdx},validParams);
   % Validate value class
@@ -42,12 +42,7 @@ for argIdx = 1:2:((nargin/2)+1)
     );
   end
   
-  if(~ischar(value))
-    value = sprintf('%f',value);
-  end
-  
-  setfield(simPropStruct,validString,varargin{argIdx+1});
-  
+  eval(['simPropStruct.' validString ' = varargin{argIdx+1};']);
   
 end
 

@@ -1,13 +1,14 @@
-function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,materialList,materialAssign,simProps,f_sim)
+function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,materialList,materialAssign,simProps,meshProps,f_sim)
 
 % Inputs: 
 % 1. meshData - Structure with all of the mesh data
 % 2. materialList - Cell array with all the material data structures.
 % 3. materialAssign - Material assignements per face (object).
 % 4. simProps - General simulation properties
+% 5. meshProps - General mesh properties
 % 5. f_sim - Frequency (in simulation units) of current solution
 
-distTH = 1e-10;
+distTH = meshProps.stitchingTolerance;
 
 c0 = physical_constant('speed of light in vacuum');
 e0 = physical_constant('electric constant');

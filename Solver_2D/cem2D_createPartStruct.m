@@ -7,7 +7,7 @@ end
 
 % If there is no supplied part data, use default data
 if(isempty(partData))
-  partData = CEM2D_createPartDataStruct;
+  partData = cem2D_createPartDataStruct;
 end
 
 partStruct = struct('polygon',polStruct,...

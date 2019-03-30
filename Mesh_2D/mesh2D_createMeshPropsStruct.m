@@ -2,13 +2,15 @@ function meshPropStruct = mesh2D_createMeshPropsStruct(varargin)
 
 % Set default options
 meshPropStruct = struct(...
-    'relWLmeshMax',0.33,...           % 
-    'boundingBoxAddSpace',0.25,...    % 
-    'useFreespaceWLonly',0, ...       % Can be 1 or 0
-    'algorithmType','delaunay',...    % This is currently the only one, but 'mesh2D' can cope with others
-    'aspectRatioGrad',1,...           % Darren calls this 'dhdx'
-    'stitchingTolerance',1e-8, ...    % 
-    'performMeshSmoothing',1  ...     % 
+    'relWLmeshMax',0.33,...                 % 
+    'boundingBoxAddSpace',0.25,...          % 
+    'useFreespaceWLonly',0, ...             % Can be 1 or 0
+    'stitchingTolerance',1e-8, ...          % Relevant for geometry pre-processing
+    'algorithmType','delfront',...          % 'delauny' or 'delfront' - Relevant for both lfs and refine2 (and smoothing?)
+    'maxRadiusEdgeRatio',1.025, ...  % Read in 'refine2' (mesh2D) about RHO2
+    'edgeElementTH',1.333, ...       % Read in 'refine2' (mesh2D) about SIZ1
+    'triaElementTH',1.3, ...         % Read in 'refine2' (mesh2D) about SIZ1
+    'performMeshSmoothing',1  ...           % 
   );
 
 
@@ -31,7 +33,7 @@ end
 validParams = fieldnames(meshPropStruct);
 
 % Update all fields
-for argIdx = 1:2:((nargin/2)+1)
+for argIdx = 1:2:(nargin - 1)
   % Validate that paramter has the correct name
   validString = validatestring(varargin{argIdx},validParams);
   % Validate value class
@@ -43,15 +45,16 @@ for argIdx = 1:2:((nargin/2)+1)
       sprintf('Parameter ''%s'' needs to be of class ''%s''',validString,requiredClass)...
     );
   end
-  
-  setfield(meshPropStruct,validString,varargin{argIdx+1});
+%  fprintf(1,['meshPropStruct.' validString ' = varargin{argIdx+1};\n']);
+%  setfield(meshPropStruct,validString,varargin{argIdx+1});
+  eval(['meshPropStruct.' validString ' = varargin{argIdx+1};']);
   
   if(~ischar(value))
     value = sprintf('%f',value);
   end
   % t wrong possible values
 end
-  eval(['meshPropStruct. ' validString ' = ' value ';']);
+  
   
   % TBD: Detect wrong possible values
 end
