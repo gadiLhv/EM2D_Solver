@@ -55,6 +55,8 @@ function [pols,ignoredEnts] = mod2D_convertEntityListToPolygons(dxfEnts)
             
             isClosedPolygon = (x(1) == x(end)) & (y(1) == y(end));
             if isClosedPolygon
+                x = x(1:(end-1));
+                y = y(1:(end-1));
                 % If the polygon is now closed, store and clear
                 pols(polCtr) = mod2D_createPolygonStruct(x,y);
                 polCtr = polCtr + 1;

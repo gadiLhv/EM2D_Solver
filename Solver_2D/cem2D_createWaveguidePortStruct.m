@@ -1,32 +1,13 @@
-function wgPortStruct = cem2D_createWaveguidePortStruct(varargin)
-  
-wgPortStruct = struct('nMode',0,...                 % Varies number of peaks. 0 for discrete port, 1 for single peak sinus, etc.
-                      'power',1,...                 % Port power in Watts. Normalized to 50Ohm
-                      'refPlaneDist',0,...          % De-embedding
-                      'normImpedance',50,...        % Impedance to re-normalize
-                      'assignedLine',1              % Index of the assigned polyline line assignement list.
-                  );
-                  
-
-% For validation of inputs
-validParams = fieldnames(wgPortStruct);
-
-% Update all fields
-for argIdx = 1:2:(nargin-1)
-    % Validate that paramter has the correct name
-    validString = validatestring(varargin{argIdx},validParams);
-    % Validate value class
-    value = varargin{argIdx+1};
-    requiredClass = class(getfield(pwStruct,validString));
-    givenClass = class(value);
-    if(~strcmp(requiredClass,givenClass))
-    error(...
-        sprintf('Parameter ''%s'' needs to be of class ''%s''',validString,requiredClass));
-    end
-
-    if(~ischar(value))
-    value = sprintf('%f',value);
-    end
-
-    eval(['wgPortStruct.' validString ' = varargin{argIdx+1};']);
+function portStruct = cem2D_createWaveguidePortStruct(varargin)
+    % Create default data
+    
+    portStruct = struct(...
+        'polylineNumber',nan,...        % Number of polyline in polyline list
+        'numberOfModes',1,...           % Number of modes to calculate
+        'deembedDist',0,...             % Deembed distance, in simulation units
+        'normImpedance',50,...          % Impedance to normalize to
+        'power',1);                     % Power infused in simulation units
+    
+    portStruct = misc_validatePropStruct(portStruct,varargin);
+    
 end

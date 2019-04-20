@@ -59,6 +59,7 @@ function initMesh = mesh2D_generateInitialMesh(polygonList,polylineList,material
     
     % Face assignment is with respect to the old indexes
     tnum = faceIdxs(tnum);
+    tnum = tnum(:);
     face = origFaceList;
     
     % Attach all to single structure          

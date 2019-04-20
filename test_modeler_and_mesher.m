@@ -7,7 +7,7 @@ modelerPath = './Modeler_2D';
 mesherPath = '/home/gadi/Repositories/mesh2d';
 meshWrapperPath = './Mesh_2D';
 solverPath = './Solver_2D';
-
+miscPath = './misc';
 
 %% Mesher parameters
 % Set printout/no printout
@@ -31,14 +31,17 @@ boundingBoxAddSpace = 0.125;
 
 
 addpath(modelerPath);
-addpath(mesherPath);
+addpath(genpath(mesherPath));
 addpath(meshWrapperPath);
 addpath(solverPath);
+addpath(miscPath);
 
 % Define mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
               'relWLmeshMax',relWLmeshMax, ...
-              'boundingBoxAddSpace',boundingBoxAddSpace);
+              'boundingBoxAddSpace',boundingBoxAddSpace, ...
+              'algorithmType','delaunay',... delaunay delfront
+              'maxRadiusEdgeRatio',1.25);
 
 % Define simulation properties
 simProps = cem2D_createSimPropsStruct('fMin',fMin,'fMax',fMax,...
@@ -65,8 +68,9 @@ materialList = cem2D_addMaterialToList(material7p2,materialList);
 pol1 = mod2D_createRectangleStruct([-2 -2]*10,[2 -1]*10);
 pol2 = mod2D_createRectangleStruct([-2 -1]*10,[2 0]*10);
 pol3 = mod2D_createRectangleStruct([-2 0]*10,[2 1]*10);
-rect1 = mod2D_createRectangleStruct([-1 -1.5]*10,[1 0.5]*10);
-pol1 =  mod2D_booleanOperation(pol1,rect1,'subtract');
+rect1 = mod2D_createRectangleStruct([-1 -0.5]*10,[1 0.5]*10);
+rect2 = mod2D_createRectangleStruct([-0.5 -1.75]*10,[0.5 -1.25]*10);
+pol1 =  mod2D_booleanOperation(pol1,rect2,'subtract');
 pol2 =  mod2D_booleanOperation(pol2,rect1,'subtract');
 pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 
@@ -84,7 +88,7 @@ pol3 =  mod2D_booleanOperation(pol3,rect1,'subtract');
 %pol3 = mod2D_createPolygonStruct([-0.7 0.4 1],[-0.6 -0.8 1]);
 
 % Create edge port line
-line1 = mod2D_createEdgeStruct([-1.5 -1.5]*10,[0.3 0.8]*10);
+line1 = mod2D_createLineStruct([-1.5 -1.5]*10,[0.3 0.8]*10);
 
 % Create polygon list
 polList = {pol1,pol2,pol3};
@@ -143,7 +147,7 @@ initMesh = mesh2D_generateInitialMesh(...
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
 % 2. Smooth the mesh
-smoothMesh = mesh2D_smoothMesh(initMesh,meshProps);
+finalMesh = mesh2D_smoothMesh(initMesh,meshProps);
             
 % Plot initial mesh
 figure('position',[240    165   1053    596]);
@@ -189,32 +193,32 @@ title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
 hold off;
 
 subplot(1,2,2);
-patch('faces',smoothMesh.tria(smoothMesh.tnum == 1,1:3),'vertices',smoothMesh.vert, ...
+patch('faces',finalMesh.tria(finalMesh.tnum == 1,1:3),'vertices',finalMesh.vert, ...
     'facecolor',[1.,1.,1.], ...
     'edgecolor',[0,0,0]) ;
 hold on; 
 axis image off;
 randColor = rand([1 3]);
-patch('faces',smoothMesh.tria(smoothMesh.tnum == 2,1:3),'vertices',smoothMesh.vert, ...
+patch('faces',finalMesh.tria(finalMesh.tnum == 2,1:3),'vertices',finalMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
-patch('faces',smoothMesh.tria(smoothMesh.tnum == 3,1:3),'vertices',smoothMesh.vert, ...
+patch('faces',finalMesh.tria(finalMesh.tnum == 3,1:3),'vertices',finalMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 randColor = rand([1 3]);
-patch('faces',smoothMesh.tria(smoothMesh.tnum == 4,1:3),'vertices',smoothMesh.vert, ...
+patch('faces',finalMesh.tria(finalMesh.tnum == 4,1:3),'vertices',finalMesh.vert, ...
     'facecolor',randColor, ...
     'edgecolor',[0,0,0]) ;
 
-edgeVect1 = smoothMesh.vert(smoothMesh.etri(:,1),:);
-edgeVect2 = smoothMesh.vert(smoothMesh.etri(:,2),:);
+edgeVect1 = finalMesh.vert(finalMesh.etri(:,1),:);
+edgeVect2 = finalMesh.vert(finalMesh.etri(:,2),:);
 edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
 edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
 plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[0 0 0]);
     
-edgeVect1 = smoothMesh.vert(smoothMesh.ltri(:,1),:);
-edgeVect2 = smoothMesh.vert(smoothMesh.ltri(:,2),:);
+edgeVect1 = finalMesh.vert(finalMesh.ltri(:,1),:);
+edgeVect2 = finalMesh.vert(finalMesh.ltri(:,2),:);
 edgeVectX = [edgeVect1(:,1) edgeVect2(:,1)].';
 edgeVectY = [edgeVect1(:,2) edgeVect2(:,2)].';
 %plot(edgeVectX,edgeVectY,'-','linewidth',2,'color',[1 0 0]);
@@ -225,11 +229,11 @@ for segIdx = 1:size(edgeVectX,2)
 end
 
 title(['MESH-Smoothed.: KIND=DELFRONT, |TRIA|=', ...
-    num2str(size(smoothMesh.tria,1))]) ;
+    num2str(size(finalMesh.tria,1))]) ;
     
 hold off;
 
 rmpath(modelerPath);
-rmpath(mesherPath);
+rmpath(genpath(mesherPath));
 rmpath(meshWrapperPath);
 rmpath(solverPath);

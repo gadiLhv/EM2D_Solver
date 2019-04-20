@@ -7,13 +7,16 @@ close all
 modelerPath = './Modeler_2D';
 mesherPath = '/home/gadi/Repositories/mesh2d';
 meshWrapperPath = './Mesh_2D';
-solverPath = './Solver_2D';
+solver2DPath = './Solver_2D';
+solver1DPath = './Solver_1D';
+miscPath = './misc';
 
 addpath(modelerPath);
 addpath(genpath(mesherPath));
 addpath(meshWrapperPath);
-addpath(solverPath);
-
+addpath(solver2DPath);
+addpath(solver1DPath);
+addpath(miscPath);
 
 % Simulation properties
 simProps = cem2D_createSimPropsStruct(...
@@ -48,17 +51,16 @@ backPlate = mod2D_createRectangleStruct([0.5*horn_WG_L -0.5*horn_WG_H-horn_metal
 portLine = mod2D_createLineStruct([0.5*horn_WG_L -0.5*horn_WG_H-horn_metal_thick],[0.5*horn_WG_L 0.5*horn_WG_H+horn_metal_thick]);
 
 taper_ang = horn_taper_ang_deg*pi/180;
+
 topTaper = mod2D_createPolygonStruct(...
             [-0.5*horn_WG_L ; ...
              -0.5*horn_WG_L-horn_taper_L ; ...
              -0.5*horn_WG_L-horn_taper_L ; ...
-             -0.5*horn_WG_L ; ...
              -0.5*horn_WG_L], ...
             [0.5*horn_WG_H ; ...
              0.5*horn_WG_H+horn_taper_L*tan(taper_ang) ; ...
              0.5*horn_WG_H+horn_taper_L*tan(taper_ang)+horn_metal_thick ; ...
-             0.5*horn_WG_H+horn_metal_thick ; ...
-             0.5*horn_WG_H]);
+             0.5*horn_WG_H+horn_metal_thick]);
 
 botTaper = mod2D_createPolygonStruct(...
             [-0.5*horn_WG_L ; ...
@@ -69,9 +71,8 @@ botTaper = mod2D_createPolygonStruct(...
             [-0.5*horn_WG_H ; ...
              -0.5*horn_WG_H-horn_taper_L*tan(taper_ang) ; ...
              -0.5*horn_WG_H-horn_taper_L*tan(taper_ang)-horn_metal_thick ; ...
-             -0.5*horn_WG_H-horn_metal_thick ; ...
+             -0.5*horn_WG_H-horn_metal_thick; ...
              -0.5*horn_WG_H]);
-
 % Show geometry
 topPanel = mod2D_booleanOperation(topPanel,topTaper,'add');
 botPanel = mod2D_booleanOperation(botPanel,botTaper,'add');
@@ -105,6 +106,7 @@ for polIdx = 1:numel(polList)
 end
 
 polList = [{bBox} polList];
+lineList = {portLine};
 materialAssignement = [{'default'},materialAssignement];
 
 
@@ -123,31 +125,41 @@ mod2D_showPolyline(axHdl,portLine,[0.3 1 0.3]);
 %%%%%%%%%%%%%%%%%%%%%
 
 % Test mesh of bounding box
-initMesh = mesh2D_generateInitialMesh(...
+meshData = mesh2D_generateInitialMesh(...
             polList,...             % Entire polygon list. This is mainly to calculate the maximum\minimum edge length
-            {portLine},...          % List of lines. Used for porst, mainly.
+            lineList,...            % List of lines. Used for porst, mainly.
             materialAssignement,... % Material assignments for initial LFS assignment
             materialList,...        % Corresponding material properties
             meshProps,...           % Darrens Mesher properties
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
 % Smooth the mesh
-smoothMesh = mesh2D_smoothMesh(initMesh,meshProps);
+meshData = mesh2D_smoothMesh(meshData,meshProps);
 
 hold(axHdl,'on');
-patch('faces',smoothMesh.tria(smoothMesh.tnum == 1,1:3),'vertices',smoothMesh.vert, ...
+patch('faces',meshData.tria(meshData.tnum == 1,1:3),'vertices',meshData.vert, ...
     'facecolor','none', ...
     'edgecolor',[0,0,0]) ;
 hold off;
 axHdl = gca;
 mod2D_showPolyline(axHdl,portLine,[1 0 0]);    
 
-% Assign to outline the 2nd order radiating boundary conditions
-[K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
-                    smoothMesh,...              % Mesh to use for final matrix
-                    materialList,...            % List of all materials used
-                    materialAssignement,...     % Material assignements per-face
-                    simProps,...                % Simulation properties
-                    meshProps,...               % Mesh properties
-                    0.5*(simProps.fMax + simProps.fMin));
-                    
+portStruct = cem2D_createWaveguidePortStruct('polyLineNumber',1);
+%
+%% Generate port modes
+%[U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(...
+%                            portStruct,...
+%                            smoothMesh,...
+%                            materialList,...
+%                            materialAssignment,...
+%                            simProps);
+%
+%% Assign to outline the 2nd order radiating boundary conditions
+%[K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
+%                    smoothMesh,...              % Mesh to use for final matrix
+%                    materialList,...            % List of all materials used
+%                    materialAssignement,...     % Material assignements per-face
+%                    simProps,...                % Simulation properties
+%                    meshProps,...               % Mesh properties
+%                    0.5*(simProps.fMax + simProps.fMin));
+%                    

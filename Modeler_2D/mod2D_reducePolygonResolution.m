@@ -24,6 +24,13 @@ function pols = mod2D_reducePolygonResolution(pols,minDist)
             % Iterate through vertices in loop
             cLoop = [cPol.x(loopStart(loopIdx):loopEnd(loopIdx)) cPol.y(loopStart(loopIdx):loopEnd(loopIdx))];
             vertIdx = 1;
+            
+            % Check if this is the last loop, which is the only non-self-
+            % connected loop.
+            isLastLoop = loopIdx == numel(loopStart);
+            if(isLastLoop)
+                cLoop = [cLoop ; cLoop(1,:)];
+            end
             % Iterate through vertices and clean up if necessary
             while vertIdx < size(cLoop,1)
                 cVert = cLoop(vertIdx,:);
@@ -42,6 +49,10 @@ function pols = mod2D_reducePolygonResolution(pols,minDist)
                 cLoop = [cLoop ; cLoop(1,:)];
             end
             totalVertsEnd = totalVertsEnd + size(cLoop,1);
+            
+            if(isLastLoop)
+                cLoop = cLoop(1:end-1,:);
+            end
             
             % Store new polygon
             newX = [newX ; cLoop(:,1)];
