@@ -16,3 +16,8 @@ function materialDef = cem2D_createMaterialDefs(varargin)
     materialDef = misc_validatePropStruct(materialDef,varargin);
 
 end
+
+hold(axHdl,'on');
+patch('faces',meshData.tria(meshData.tnum == 1,1:3),'vertices',meshData.vert, ...
+    'facecolor','none', ...
+    'edgecolor',[0,0,0]) ;

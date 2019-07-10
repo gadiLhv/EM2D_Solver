@@ -95,11 +95,22 @@ end
 %% Calculate K matrix and b vector
 
 qs = zeros([size(segmentList,1) 1]);
-qs(2:N(1)-1) = -2*1i*k0*H0;
+qs(1:N(1)-1) = -2*1i*k0*H0;
 
 gammas = zeros([size(segmentList,1) 1]);
-gammas(2:N(1)-1) = -1i*k0;
-gammas(N(1)+N(2):2*N(1)+N(2)) = -1i*k0;
+gammas(1:N(1)-1) = -1i*k0;
+gammas((N(1)+N(2) - 1):(2*N(1)+N(2) - 3)) = -1i*k0;
+
+figure;
+for segIdx = 1:size(gammas,1)
+    if gammas(segIdx) ~= 0
+        plot(nodeList(segmentList(segIdx,2:3),2),nodeList(segmentList(segIdx,2:3),3),'-b','linewidth',3);
+    else
+        plot(nodeList(segmentList(segIdx,2:3),2),nodeList(segmentList(segIdx,2:3),3),'-r','linewidth',3);
+    end
+    hold on;
+end
+hold off;
 
 [K,b] = construct_Kmat_bvect(nodeList,elementList,segmentList,ax,ay,beta,gammas,qs);
 

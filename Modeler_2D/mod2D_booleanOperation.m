@@ -10,6 +10,9 @@ function newPolStruct = mod2D_booleanOperation(pol1,pol2,opString)
     [newPol,numberOfLoops] = clipPolygon(polCoors1,...  
                                          polCoors2,...
                                          opCode);
+                                         
+    % Check for zero volume polygons
+    
 %    catch(lasterror)
 %        % Catch the latest error message like this:
 %        fprintf(1,'Error: %s\n',lasterror.message);

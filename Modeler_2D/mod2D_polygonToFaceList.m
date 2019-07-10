@@ -119,10 +119,10 @@ function [nodes,edges,faces,lines,fixesApplied] = mod2D_polygonToFaceList(polygo
             
         end
             
-%            %%%%%%%%%%%%%%%%%%%%%%%%
-%            % Debug: Show polygons %
-%            % and current line     %
-%            %%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%
+            % Debug: Show polygons %
+            % and current line     %
+            %%%%%%%%%%%%%%%%%%%%%%%%
 %            figure('position',[852   163   560   420]);;
 %            [x,y] = polygon2patch(polygons{1}.x,polygons{1}.y);
 %            patch(x,y,'facecolor',[1 1 1],'edgecolor',[0 0 0]);

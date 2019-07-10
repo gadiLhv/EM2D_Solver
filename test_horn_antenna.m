@@ -22,7 +22,7 @@ addpath(miscPath);
 simProps = cem2D_createSimPropsStruct(...
                 'fMin',25,...
                 'fMax',35,...
-                'polarizationType','TE');
+                'polarizationType','TM');
 
 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
@@ -66,13 +66,11 @@ botTaper = mod2D_createPolygonStruct(...
             [-0.5*horn_WG_L ; ...
              -0.5*horn_WG_L-horn_taper_L ; ...
              -0.5*horn_WG_L-horn_taper_L ; ...
-             -0.5*horn_WG_L ; ...
              -0.5*horn_WG_L], ...
             [-0.5*horn_WG_H ; ...
              -0.5*horn_WG_H-horn_taper_L*tan(taper_ang) ; ...
              -0.5*horn_WG_H-horn_taper_L*tan(taper_ang)-horn_metal_thick ; ...
-             -0.5*horn_WG_H-horn_metal_thick; ...
-             -0.5*horn_WG_H]);
+             -0.5*horn_WG_H-horn_metal_thick]);
 % Show geometry
 topPanel = mod2D_booleanOperation(topPanel,topTaper,'add');
 botPanel = mod2D_booleanOperation(botPanel,botTaper,'add');
@@ -115,11 +113,14 @@ materialAssignement = [{'default'},materialAssignement];
 %%%%%%%%%%%%%%%%%%%%%
 figHdl = figure;
 axHdl = axes;
-mod2D_showPolygon(axHdl,bBox,[169 220 228]/255,[0 0 0]);
+mod2D_showPolygon(axHdl,bBox,[1 1 1],[0 0 0]);
 mod2D_showPolygon(axHdl,topPanel,[0.3 0.3 0.3],[0 0 0]);
 mod2D_showPolygon(axHdl,botPanel,[0.3 0.3 0.3],[0 0 0]);
-mod2D_showPolygon(axHdl,backPlate,[0.6 0.1 0.2],[0 0 0]);
-mod2D_showPolyline(axHdl,portLine,[0.3 1 0.3]);
+mod2D_showPolygon(axHdl,backPlate,[0 0.1 0.7],[0 0 0]);
+
+set(gca,'fontsize',14);
+xlabel('x [mm]','fontsize',16);
+ylabel('y [mm]','fontsize',16);
 %%%%%%%%%%%%%%%%%%%%%
 % Plot the geometry %
 %%%%%%%%%%%%%%%%%%%%%
@@ -140,20 +141,39 @@ hold(axHdl,'on');
 patch('faces',meshData.tria(meshData.tnum == 1,1:3),'vertices',meshData.vert, ...
     'facecolor','none', ...
     'edgecolor',[0,0,0]) ;
-hold off;
-axHdl = gca;
-mod2D_showPolyline(axHdl,portLine,[1 0 0]);    
+
+% Plot lines
+lineIdxs = unique(meshData.lnum);
+for cLineIdx = lineIdxs(:).'
+    cLineVertPairs = meshData.ltri(meshData.lnum == cLineIdx,:);
+    
+    cLineR1 = meshData.vert(cLineVertPairs(:,1),:);
+    cLineR2 = meshData.vert(cLineVertPairs(:,2),:);
+    
+    plot([cLineR1(:,1) cLineR2(:,1)].',[cLineR1(:,2) cLineR2(:,2)].','-r','linewidth',3);
+    plot(cLineR1(:,1),cLineR1(:,2),'.b','markersize',20);
+    plot(cLineR2(:,1),cLineR2(:,2),'.g','markersize',10);
+end
+
+hold(axHdl,'off');
+
+%mod2D_showPolyline(axHdl,portLine,[1 0 0]);    
 
 portStruct = cem2D_createWaveguidePortStruct('polyLineNumber',1);
-%
-%% Generate port modes
-%[U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(...
-%                            portStruct,...
-%                            smoothMesh,...
-%                            materialList,...
-%                            materialAssignment,...
-%                            simProps);
-%
+
+% For this example  , set the simulation frequency as the middle between
+% minimum and maximum frequency
+simProps.fSim = 0.5*(simProps.fMin + simProps.fMax);
+
+% Generate port modes
+[U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(...
+                            portStruct,...
+                            meshData,...
+                            materialList,...
+                            materialAssignement,...
+                            meshProps,...
+                            simProps);
+%%
 %% Assign to outline the 2nd order radiating boundary conditions
 %[K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
 %                    smoothMesh,...              % Mesh to use for final matrix
@@ -163,3 +183,9 @@ portStruct = cem2D_createWaveguidePortStruct('polyLineNumber',1);
 %                    meshProps,...               % Mesh properties
 %                    0.5*(simProps.fMax + simProps.fMin));
 %                    
+rmpath(modelerPath);
+rmpath(genpath(mesherPath));
+rmpath(meshWrapperPath);
+rmpath(solver2DPath);
+rmpath(solver1DPath);
+rmpath(miscPath);
