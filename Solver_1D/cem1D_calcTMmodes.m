@@ -1,4 +1,4 @@
-function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
+function [Ez,k_xi,segVerts] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
 % [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
 % Calculates the 1D modes, with Z-infinite approximation, for the TM case (Ez).
 % Inputs:
@@ -64,6 +64,9 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
     
     e0 = physical_constant('electric constant');
     m0 = physical_constant('mag. constant');
+    c0 = physical_constant('speed of light in vacuum');
+    
+    k0 = 2*pi*units(simProps.freqUnits,'Hz',simProps.fSim)/c0;
     
     for segIdx = 1:size(segVerts,1)
         cMaterial = cem2D_getMaterialPropsFromName(segMaterials{segIdx},materialList);
@@ -72,7 +75,9 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
         mr = cMaterial.mr;
         
         a = -(1/mr);
-        b = er;        
+        b = er*k0^2;   
+        g = 1/mr;
+        
         le = l(segIdx);
         
         if strcmp(matType,'normal');
@@ -82,13 +87,15 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
             Be_BC = [];
             % Currently only handles metals as pure metal
         else
-            Ae_BC = ones([2 1])*a/le;
-            Be_BC = -ones([2 1])*b*le/3;
+%            Ae_BC = ones([2 1])*a/le;
+%            Be_BC = -ones([2 1])*b*le/3;
+            Ae_BC = ones([2 1])*a/le - ones([2 1])*b*le/3;
+            Be_BC = -ones([2 1])*g*le/3;
         end
         
         % Initialize sub-element matrices
-        Ae = (1/le)*[[a -a] ; [-a a]];
-        Be = -b*le*[[1/3 1/6] ; [1/6 1/3]];
+        Ae = (1/le)*[[a -a] ; [-a a]] + b*le*[[1/3 1/6] ; [1/6 1/3]];
+        Be = g*le*[[1/3 1/6] ; [1/6 1/3]];
         
         % Here "hard" B.C. of zero electric TANGENTIAL electric field
         % must be suited inside.
@@ -141,9 +148,14 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
     B(:,idxInNormals) = [];
    
     [Unormal,eigVal] = eig(B\A);
-    k_xi = sqrt(diag(eigVal));
+    k_zeta = sqrt(diag(eigVal));
+    k_xi = sqrt(k0^2 - k_zeta.^2);
     
-    [k_xi,sortIdxs] = sort(k_xi);
+    if(max(abs(imag(k_xi(:)))) > 1e-6)
+        warning('Cutoff frequency is imaginary up to 1e-6.');
+    end
+    
+    [k_xi,sortIdxs] = sort(real(k_xi));
     Unormal = Unormal(:,sortIdxs);
     
     % Pad the Unormal back
@@ -172,9 +184,8 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    figure('position',[257     75   1138    749]);
 %    
-%    c0 = physical_constant('speed of light in vacuum');
-%    f0 = units(simProps.freqUnits,'Hz',simProps.fSim);
-%    k0 = 2*pi*f0/c0;
+%%    c0 = physical_constant('speed of light in vacuum');
+%%    f0 = units(simProps.freqUnits,'Hz',simProps.fSim);
 %    
 %    nSubX = 3;
 %    nSubY = 2;
@@ -205,7 +216,7 @@ function [Ez,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterials,
 %        ylabel('|E_z| [V/m]','fontsize',14);
 %        kz = sqrt(k0^2 - k_xi(modeIdx).^2);
 %        f_cutoff = c0*k_xi(modeIdx)/(2*pi);
-%        er_eff = c0*kz./(2*pi*f0);
+%%        er_eff = c0*kz./(2*pi*f0);
 %        title(sprintf('Mode #%d ; f_c = %.2f GHz',modeIdx,f_cutoff/1e9),'fontsize',14);
 %        grid on;
 %    end

@@ -1,4 +1,4 @@
-function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
+function [Hz,k_xi,segVerts] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
 % [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,materialList,simProps)
 % Calculates the 1D modes, with Z-infinite approximation, for the TE case (Hz).
 % Inputs:
@@ -47,8 +47,12 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
     % 1. Convert "weakest material, to give dielectric constant to relevant metals??
     % 2. Convert TE\TM mode builders to exclude fully metallic segments.
     
+    e0 = physical_constant('electric constant');
+    m0 = physical_constant('mag. constant');
+    c0 = physical_constant('speed of light in vacuum');
     
-    
+    k0 = 2*pi*units(simProps.freqUnits,'Hz',simProps.fSim)/c0;
+
     for segIdx = 1:size(segVerts,1)
         cMaterial = cem2D_getMaterialPropsFromName(segMaterials{segIdx},materialList);
         matType = cMaterial.type;
@@ -56,7 +60,8 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
         mr = cMaterial.mr;
         
         a = -(1/er);
-        b = mr;
+        b = mr*k0^2;  
+        g = 1/er;
         
         le = l(segIdx);
         
@@ -67,14 +72,14 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
             Be_BC = [];
             % Currently only handles metals as pure metal
         else
-            Ae_BC = ones([2 1])*a/le;
-            Be_BC = -ones([2 1])*b*le/3;
+            Ae_BC = ones([2 1])*a/le + ones([2 1])*b*le/3;
+            Be_BC = ones([2 1])*g*le/3;
         end
         
         
         % Initialize sub-element matrices
-        Ae = (1/le)*[[a -a] ; [-a a]];
-        Be = -b*le*[[1/3 1/6] ; [1/6 1/3]];
+        Ae = (1/le)*[[a -a] ; [-a a]] + b*le*[[1/3 1/6] ; [1/6 1/3]];
+        Be = g*le*[[1/3 1/6] ; [1/6 1/3]];
         
         segRange = segVertsMapping(segIdx,:);
         A(segRange,segRange) = A(segRange,segRange) + Ae;
@@ -92,10 +97,15 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
     end
    
     [Unormal,eigVal] = eig(B\A);
-    k_xi = sqrt(diag(eigVal));
-        
+    k_zeta = sqrt(diag(eigVal));
+    k_xi = sqrt(k0^2 - k_zeta.^2);
+
+    if(max(abs(imag(k_xi(:)))) > 1e-6)
+        warning('Cutoff frequency is imaginary up to 1e-6.');
+    end
+    
     % Sort by eigenvalue order
-    [k_xi,sortIdxs] = sort(k_xi);
+    [k_xi,sortIdxs] = sort(real(k_xi));
     Unormal = Unormal(:,sortIdxs);
         
     % Now this needs to be mapped into the original segment
@@ -118,11 +128,6 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
     % Debug: Draw first 3 modes %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    figure('position',[257     75   1138    749]);
-%    c0 = physical_constant('speed of light in vacuum');
-%    e0 = physical_constant('electric constant');
-%    m0 = physical_constant('mag. constant');
-%    f0 = units(simProps.freqUnits,'Hz',simProps.fSim);
-%    k0 = 2*pi*f0/c0;
 %    
 %    nSubX = 3;
 %    nSubY = 2;
@@ -153,7 +158,6 @@ function [Hz,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterials,
 %        ylabel('|H_z| [A/m]','fontsize',14);
 %        kz = sqrt(k0^2 - k_xi(modeIdx).^2);
 %        f_cutoff = c0*k_xi(modeIdx)/(2*pi);
-%        er_eff = c0*kz./(2*pi*f0);
 %        title(sprintf('Mode #%d ; f_c = %.2f GHz',modeIdx,f_cutoff/1e9),'fontsize',14);
 %        grid on;
 %    end

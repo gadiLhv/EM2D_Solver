@@ -1,4 +1,4 @@
-function [U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(portStruct, meshData, materialList, materialAssignment, meshProps, simProps)
+function portStruct = cem1D_calcPortModes(portStruct, meshData, materialList, materialAssignment, meshProps, simProps)
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -120,9 +120,9 @@ function [U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(portStruct, meshData
 %    
     switch simProps.polarizationType
         case 'TE'
-            [U,k_xi] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterial,materialList,simProps);
+            [U,k_xi,segVerts] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segMaterial,materialList,simProps);
         case 'TM'
-            [U,k_xi] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterial,materialList,simProps);
+            [U,k_xi,segVerts] = cem1D_calcTMmodes(segVerts,meshData,meshProps,segMaterial,materialList,simProps);
     end
     
         % Assumes that mu_r is 1!! (for effective DIELECTIC constant)
@@ -133,10 +133,9 @@ function [U,eigVal,f_cutoff,eff_diel] = cem1D_calcPortModes(portStruct, meshData
     k0 = 2*pi*f0/c0;
     
     eigVal = k_xi;
-    kz = sqrt(k0^2 - k_xi.^2);
-    f_cutoff = c0*k_xi/(2*pi);
-    er_eff = c0*kz./(2*pi*f0)
-   
+    portStruct.f_cutoff = units('Hz',simProps.freqUnits,c0*k_xi/(2*pi));
+    portStruct.portSegments = segVerts;
+    portStruct.portModes = U;
 end
 
 function segMaterial = segmentWeakestMaterial(p1,p2,meshData, materialList, materialAssignment, meshProps);
