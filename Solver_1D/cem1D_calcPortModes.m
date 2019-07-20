@@ -33,6 +33,11 @@ function portStruct = cem1D_calcPortModes(portStruct, meshData, materialList, ma
     segDir = p2 - p1;
     segNorm = ([[0 -1] ; [1 0]]*segDir(:)).';
     
+    % Calculate port center for later
+    portCenter = 0.5*(p1 + p2);
+    % And normalize direction
+    segNorm = segNorm/sqrt(sum(segNorm(:).^2,1));
+    
     % Segment by segment, build adjacent material list. The material considered
     % as the WG structure is the "weakest" in the list. The order from strongest
     % to weakest:
@@ -73,7 +78,7 @@ function portStruct = cem1D_calcPortModes(portStruct, meshData, materialList, ma
         % Replace the current point with the opposite on this segment
         cPt = segPt2;
         
-        % Define     point at infinity so the distance will never be minimal
+        % Define point at infinity so the distance will never be minimal
         fLineR1(closestSeg,:) = inf;
         fLineR2(closestSeg,:) = inf;
         
@@ -136,6 +141,9 @@ function portStruct = cem1D_calcPortModes(portStruct, meshData, materialList, ma
     portStruct.f_cutoff = units('Hz',simProps.freqUnits,c0*k_xi/(2*pi));
     portStruct.portSegments = segVerts;
     portStruct.portModes = U;
+    portStruct.portDirection = segNorm;
+    portStruct.portCenter = portCenter;
+    portStruct.segMaterial = segMaterial;
 end
 
 function segMaterial = segmentWeakestMaterial(p1,p2,meshData, materialList, materialAssignment, meshProps);
