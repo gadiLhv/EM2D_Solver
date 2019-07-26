@@ -163,7 +163,6 @@ function [Hz,k_xi,segVerts] = cem1D_calcTEmodes(segVerts,meshData,meshProps,segM
 %    end
 %    
 %    close(gcf);
-%    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % End Debug: Draw first 3 modes %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

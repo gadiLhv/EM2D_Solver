@@ -1,12 +1,13 @@
-function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,materialList,materialAssign,simProps,meshProps,f_sim)
+function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,meshProps,radEdgeIdxs,materialList,materialAssign,simProps,f_sim)
 
 % Inputs: 
 % 1. meshData - Structure with all of the mesh data
-% 2. materialList - Cell array with all the material data structures.
-% 3. materialAssign - Material assignements per face (object).
-% 4. simProps - General simulation properties
-% 5. meshProps - General mesh properties
-% 5. f_sim - Frequency (in simulation units) of current solution
+% 2. meshProps - General mesh properties
+% 3. radEdgeIdxs - Edge numbers in the original faces - meshData.edge(:,edgeIdx) 
+% 4. materialList - Cell array with all the material data structures.
+% 5. materialAssign - Material assignements per face (object).
+% 6. simProps - General simulation properties
+% 7. f_sim - Frequency (in simulation units) of current solution
 
 distTH = meshProps.stitchingTolerance;
 
@@ -18,6 +19,8 @@ m0 = physical_constant('mag. constant');
 c0 = units('m/sec',[simProps.lengthUnits '*' simProps.freqUnits],c0);
 % Calculate wave number
 k0 = 2*pi*f_sim/c0;
+
+edgePairs = meshData.etri(radEdgeIdxs,:);
 
 % Extract background material (allways first face) properties
 cMaterialProps = cem2D_getMaterialPropsFromName(materialAssign{1},materialList);

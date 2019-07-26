@@ -16,7 +16,7 @@ function [K,b] = cem2D_createKmatBvect_WG_Port(meshData,portStruct,materialList,
     % De-embedding distance
     deDist = units(simProps.lengthUnits,'m',portStruct.deembedDist);
     
-    Ncells = size(meshData.vert,1)
+    Ncells = size(meshData.vert,1);
     
     % Initialize solution matrix\vector. Later on this should be a sparse matrix
     K = zeros([Ncells*[1 1] portStruct.numberOfModes]);

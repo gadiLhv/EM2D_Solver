@@ -99,6 +99,8 @@ bBox = mod2D_createBoundingBox(...
         meshProps,...
         simProps,...
         material_default);
+
+orig_bBox = bBox;
         
 % Subtract all shapes from bounding box
 for polIdx = 1:numel(polList)
@@ -144,6 +146,8 @@ patch('faces',meshData.tria(meshData.tnum == 1,1:3),'vertices',meshData.vert, ..
     'facecolor','none', ...
     'edgecolor',[0,0,0]) ;
 
+
+    
 % Plot lines
 lineIdxs = unique(meshData.lnum);
 for cLineIdx = lineIdxs(:).'
@@ -201,15 +205,22 @@ hold(axHdl,'off');
                     f_sim);
 
 
-%% Assign to outline the 2nd order radiating boundary conditions
-%[K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
-%                    smoothMesh,...              % Mesh to use for final matrix
-%                    materialList,...            % List of all materials used
-%                    materialAssignement,...     % Material assignements per-face
-%                    simProps,...                % Simulation properties
-%                    meshProps,...               % Mesh properties
-%                    0.5*(simProps.fMax + simProps.fMin));
-%                    
+% Extract the edges 
+bbEdgeIdxs = mod2D_extractPolygonEdges(...
+                meshData,...
+                meshProps,...
+                orig_bBox);
+               
+% Assign to outline the 2nd order radiating boundary conditions
+[K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
+                    meshDAta,...                % Mesh to use for final matrix
+                    meshProps,...               % Mesh properties
+                    bbEdgeIdxs,...
+                    materialList,...            % List of all materials used
+                    materialAssignement,...     % Material assignements per-face
+                    simProps,...                % Simulation properties
+                    f_sim);
+                    
 rmpath(modelerPath);
 rmpath(genpath(mesherPath));
 rmpath(meshWrapperPath);
