@@ -213,13 +213,18 @@ bbEdgeIdxs = mod2D_extractPolygonEdges(...
                
 % Assign to outline the 2nd order radiating boundary conditions
 [K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
-                    meshDAta,...                % Mesh to use for final matrix
+                    meshData,...                % Mesh to use for final matrix
                     meshProps,...               % Mesh properties
                     bbEdgeIdxs,...
                     materialList,...            % List of all materials used
                     materialAssignement,...     % Material assignements per-face
                     simProps,...                % Simulation properties
                     f_sim);
+
+K = K_rad + K_port;
+
+                    
+                    
                     
 rmpath(modelerPath);
 rmpath(genpath(mesherPath));
