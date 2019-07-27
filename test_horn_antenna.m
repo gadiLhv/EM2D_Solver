@@ -91,7 +91,7 @@ materialList = cem2D_addMaterialToList(material_PEC,materialList);
 % Create polygon list 
 polList = {topPanel,botPanel,backPlate};
 % Assign materials per-shape
-materialAssignement = {'PEC','PEC','PEC'};
+materialAssignment = {'PEC','PEC','PEC'};
 
 % Create bounding box (background)
 bBox = mod2D_createBoundingBox(...
@@ -109,7 +109,7 @@ end
 
 polList = [{bBox} polList];
 lineList = {portLine};
-materialAssignement = [{'default'},materialAssignement];
+materialAssignment = [{'default'},materialAssignment];
 
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -133,7 +133,7 @@ ylabel('y [mm]','fontsize',16);
 meshData = mesh2D_generateInitialMesh(...
             polList,...             % Entire polygon list. This is mainly to calculate the maximum\minimum edge length
             lineList,...            % List of lines. Used for porst, mainly.
-            materialAssignement,... % Material assignments for initial LFS assignment
+            materialAssignment,... % Material assignments for initial LFS assignment
             materialList,...        % Corresponding material properties
             meshProps,...           % Darrens Mesher properties
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
@@ -176,7 +176,7 @@ portStruct = cem1D_calcPortModes(...
                 portStruct,...
                 meshData,...
                 materialList,...
-                materialAssignement,...
+                materialAssignment,...
                 meshProps,...
                 simProps);
 
@@ -217,15 +217,34 @@ bbEdgeIdxs = mod2D_extractPolygonEdges(...
                     meshProps,...               % Mesh properties
                     bbEdgeIdxs,...
                     materialList,...            % List of all materials used
-                    materialAssignement,...     % Material assignements per-face
+                    materialAssignment,...     % Material assignements per-face
                     simProps,...                % Simulation properties
                     f_sim);
 
-K = K_rad + K_port;
 
+[K_mat,b_mat] = cem2D_createKmatBvect_materials(...
+                    meshData,...
+                    meshProps,...
+                    materialList,...
+                    materialAssignment,...
+                    simProps,...
+                    f_sim);
                     
-                    
-                    
+K = K_rad + K_port + K_mat;
+b = b_rad + b_port + b_mat;
+
+
+u = K\b;
+
+hold on;
+colormap('jet');
+meshHdl = trimesh(meshData.tria,meshData.vert(:,1),meshData.vert(:,2),zeros([size(meshData.vert,1) 1]),abs(u));
+view([0 90]);
+colorbar;
+set(meshHdl,'facecolor','flat');
+set(meshHdl,'edgealpha',0.5);
+set(meshHdl,'facealpha',0.5);
+
 rmpath(modelerPath);
 rmpath(genpath(mesherPath));
 rmpath(meshWrapperPath);

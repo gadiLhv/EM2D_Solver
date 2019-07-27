@@ -30,8 +30,8 @@ function [K,b] = cem2D_createKmatBvect_WG_Port(meshData,portStruct,materialList,
     segMaterial = portStruct.segMaterial;
     
     % Calculate segment lengths
-    pt1 = meshData.vert(segVerts(:,1),:);
-    pt2 = meshData.vert(segVerts(:,2),:);
+    pt1 = units(simProps.lengthUnits,'m',meshData.vert(segVerts(:,1),:));
+    pt2 = units(simProps.lengthUnits,'m',meshData.vert(segVerts(:,2),:));
     l = sqrt(sum(abs(pt2 - pt1).^2,2));
     
     % Maps segments by 
@@ -57,7 +57,7 @@ function [K,b] = cem2D_createKmatBvect_WG_Port(meshData,portStruct,materialList,
         end
         
         K(uniqueSegVerts,uniqueSegVerts,modeIdx) = cK;
-        cb(uniqueSegVerts,1,modeIdx) = cb;
+        b(uniqueSegVerts,1,modeIdx) = cb;
     end
 
 end

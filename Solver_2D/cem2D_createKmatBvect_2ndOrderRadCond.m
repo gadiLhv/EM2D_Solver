@@ -44,8 +44,8 @@ function [K,b] = cem2D_createKmatBvect_2ndOrderRadCond(meshData,meshProps,radEdg
     b = zeros([nVerts 1]);
 
     % Calculate absoulte distance from axis origin.
-    rho1 = meshData.vert(edgePairs(:,1),:);
-    rho2 = meshData.vert(edgePairs(:,2),:);
+    rho1 = units(simProps.lengthUnits,'m',meshData.vert(edgePairs(:,1),:));
+    rho2 = units(simProps.lengthUnits,'m',meshData.vert(edgePairs(:,2),:));
     
     % Calculate Kappa coefficients for 'gamma1\2'
     kappa = 1./[sqrt(sum(rho1.^2,2)) sqrt(sum(rho2.^2,2))];
