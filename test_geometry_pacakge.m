@@ -28,6 +28,7 @@ op   = {"Sub -clip", "AND / Intersection", "Exclusive OR", "OR / Union"};
 for i=1:numel(op)
   subplot (6, 4, [12 16]+i);
   [opol, npol] = clipPolygon(pol1, pol2, i-1);
+%  [opol, npol] = clipPolygon(pol1, pol2);
   opol = polygon2patch (opol);
   patch (pol1a(:, 1), pol1a(:, 2), 'facecolor', 'c', 'edgecolor', 'none');
   hold on
@@ -41,7 +42,8 @@ for i=1:numel(op)
 end
 
 subplot (10, 4, 37);
-[opol, npol] = clipPolygon(pol2, pol1, 0);
+% [opol, npol] = clipPolygon(pol2, pol1, 0);
+[opol, npol] = clipPolygon(pol2, pol1);
 opol = polygon2patch (opol);
 patch (pol1a(:, 1), pol1a(:, 2), 'facecolor', 'c', 'edgecolor', 'none');
 hold on

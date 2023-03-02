@@ -47,7 +47,6 @@ for faceIdx = 1:numel(meshData.face)
   % Store all triplets 
   triTriplets = meshData.tria(triBinMap,:);
   
-  
   % Find edge node pairs in this set of triangles.
   edgePairs = cem2D_findEdgeNodes(triTriplets,meshData.etri);
   

@@ -3,8 +3,11 @@ clc
 clear
 close all
 
+pkg load geometry
+pkg load miscellaneous
+
 modelerPath = './Modeler_2D';
-mesherPath = '/home/gadi/Repositories/mesh2d';
+mesherPath = '../mesh2d';
 meshWrapperPath = './Mesh_2D';
 solverPath = './Solver_2D';
 miscPath = './misc';
@@ -66,7 +69,7 @@ defaultMaterial = cem2D_createMaterialDefs;
 materialList = cem2D_addMaterialToList(defaultMaterial);
 
 % Add a dielectric
-material8p0 = cem2D_createMaterialDefs('name','plastic800','er',8);              
+material8p0 = cem2D_createMaterialDefs('name','plastic800','er',8);
 materialList = cem2D_addMaterialToList(material8p0,materialList);
 
 % Asign material properties to PCB circuit
@@ -104,6 +107,7 @@ for polIdx = 1:numel(dxfPolygons)
     mod2D_showPolygon(axHdl,cPol,[0.2 0.8 0.1],[0 0 0]);
 end
 
+warning off;
 
 %%%%%%%%%
 % Mesh! %
@@ -118,7 +122,7 @@ initMesh = mesh2D_generateInitialMesh(...
             meshProps,...           % Darrens Mesher properties
             simProps);              % Simulation properties. This is to assign spatial meshing rules, most
 
-            
+
 % Plot initial mesh
 figure('position',[240    165   1053    596]);
 subplot(1,2,1);
@@ -126,7 +130,7 @@ subplot(1,2,1);
 patch('faces',initMesh.tria(initMesh.tnum == 1,1:3),'vertices',initMesh.vert, ...
     'facecolor',[1,1,1], ...
     'edgecolor',[0,0,0]) ;
-hold on; 
+hold on;
 axis image off;
 % Plot the rest of the polygons
 copperColor = [0.953 0.968 0.478];
@@ -135,10 +139,10 @@ for polIdx = 2:numel(polList)
           'facecolor',copperColor, ...
           'edgecolor',[0,0,0]) ;
 end
-    
+
 title(['MESH.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(initMesh.tria,1))]) ;
-    
+
 hold off;
 
 % 2. Smooth the mesh
@@ -148,7 +152,7 @@ subplot(1,2,2);
 patch('faces',smoothMesh.tria(smoothMesh.tnum == 1,1:3),'vertices',smoothMesh.vert, ...
     'facecolor',[1.,1.,1.], ...
     'edgecolor',[0,0,0]) ;
-hold on; 
+hold on;
 axis image off;
 for polIdx = 2:numel(polList)
     patch('faces',initMesh.tria(initMesh.tnum == polIdx,1:3),'vertices',initMesh.vert, ...
@@ -158,10 +162,10 @@ end
 
 title(['MESH-Smoothed.: KIND=DELFRONT, |TRIA|=', ...
     num2str(size(smoothMesh.tria,1))]) ;
-    
+
 hold off;
 
-
+warning on;
 
 rmpath(modelerPath);
 rmpath(genpath(mesherPath));

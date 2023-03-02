@@ -9,7 +9,7 @@ switch opString
   case 'subtract'
     opCode = 0;
   case 'intersect'
-    opCode = 2;
+    opCode = 1;
   otherwise
     error('opStrToCode',sprintf('Boolean operation type ''%s'' not supported',opString));
 end

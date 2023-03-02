@@ -5,12 +5,16 @@ clear
 close all
 
 modelerPath = './Modeler_2D';
-mesherPath = '/home/gadi/Repositories/mesh2d';
+mesherPath = '../mesh2d';
 meshWrapperPath = './Mesh_2D';
 solver2DPath = './Solver_2D';
 solver1DPath = './Solver_1D';
 miscPath = './misc';
 
+
+warning('off')
+pkg('load','geometry');
+pkg('load','miscellaneous');
 addpath(modelerPath);
 addpath(genpath(mesherPath));
 addpath(meshWrapperPath);
