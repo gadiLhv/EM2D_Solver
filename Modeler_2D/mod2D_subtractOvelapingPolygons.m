@@ -6,6 +6,8 @@ function pols = mod2D_subtractOvelapingPolygons(pols)
 
     currentPolIdx = 1;
 
+    binOverlap = false([numel(pols) numel(pols)]);
+
     waitHdl = waitbar(0,sprintf('Intersection check %d/%d',currentPolIdx,numel(pols)));
     while currentPolIdx < numel(pols)
 
@@ -29,41 +31,87 @@ function pols = mod2D_subtractOvelapingPolygons(pols)
             nLoops = sum(isnan(cPol.x));
             % Attempt to clip the polygons one way
             newPol = mod2D_booleanOperation(cPol,testedPol,'subtract');
-            if sum(isnan(newPol.x)) > nLoops
-                cPol = newPol;
-                % Count this overlap, and consider polygons to remove
-                polOverlaps = [polOverlaps ; cTestIdx];
-                waitHdl = waitbar(currentPolIdx/(numel(pols) - numel(polOverlaps)),waitHdl,sprintf('Intersection check %d/%d',currentPolIdx,(numel(pols) - numel(polOverlaps))));
-                % No need to test the other way
-                continue;
+
+            % In case, for some reason, this returns an empty polygon
+            if isempty(newPol)
+               % Immediately test the other way around
+               newPol = mod2D_booleanOperation(testedPol,cPol,'subtract');
+               if isempty(newPol)
+%                  % Don't re-store cPol, and remove the tested one
+%                  polOverlaps = [polOverlaps ; cTestIdx];
+%                  waitHdl = waitbar(currentPolIdx/(numel(pols) - numel(polOverlaps)),waitHdl,sprintf('Intersection check %d/%d',currentPolIdx,(numel(pols) - numel(polOverlaps))));
+%                  continue;
+                   % Consider this irrecoverable for now.
+                   error('Polygons completely overlap');
+               end
+            else
+               % This isn't a full overlap
+               if sum(isnan(newPol.x)) > nLoops
+                   % Mark that there is an overlap here
+                   binOverlap(cTestIdx,currentPolIdx) = true;
+                   waitHdl = waitbar(currentPolIdx/(numel(pols) - numel(polOverlaps)),waitHdl,sprintf('Intersection check %d/%d',currentPolIdx,(numel(pols) - numel(polOverlaps))));
+%                   % No need to test the other way
+                   continue;
+               end
             end
 
             % Test the other way around
             nLoops = sum(isnan(testedPol.x));
             newPol = mod2D_booleanOperation(testedPol,cPol,'subtract');
             if sum(isnan(newPol.x)) > nLoops
-                cPol = newPol;
-                % If this is the case, the new polygon is re-instated as the original one.
-                polOverlaps = [polOverlaps ; cTestIdx];
+                % Mark this as an overlap
+                binOverlap(currentPolIdx,cTestIdx) = true;
                 waitHdl = waitbar(currentPolIdx/(numel(pols) - numel(polOverlaps)),waitHdl,sprintf('Intersection check %d/%d',currentPolIdx,(numel(pols) - numel(polOverlaps))));
             end
         end
 
-        % Return clipped polygon to list
-        pols{currentPolIdx} = cPol;
-
-        % Clear polygons from the list
-        pols(polOverlaps) = [];
+%        % Return clipped polygon to list
+%        pols{currentPolIdx} = cPol;
+%
+%        % Clear polygons from the list
+%        pols(polOverlaps) = [];
 
         currentPolIdx = currentPolIdx + 1;
     end
 
-%    % Split polygons if necessary
-%    polCtr = 1;
-%    while polCtr <= numel(pols)
-%       cPol = pols{polCtr};
-%
-%    end
+    % All those that don't overlap
 
+    clippedPolIdxs = [];
+    while sum(binOverlap(:))
+      % Look at the polygons that have the most overlaps, first.
+      [~,sortOrder] = sort(sum(binOverlap,1),'descend');
+
+      cPolIdx = sortOrder(1);
+
+      % Each row that has an odd number of overlaps, is going to be deleted
+      cSum = binOverlap(:,cPolIdx).*sum(binOverlap,2);
+
+      % To be deleted
+      polsToClip = find(mod(cSum,2));
+
+      % Delete polygons and remove them from table
+      cPol = pols{cPolIdx};
+      for pIdx = polsToClip(:).'
+         clipPol = pols{pIdx};
+         cPol = mod2D_booleanOperation(cPol,clipPol,'subtract');
+
+         % In this column,
+         binOverlap(binOverlap(:,pIdx),cPolIdx) = false;
+
+         clippedPolIdxs = [clippedPolIdxs ; pIdx];
+      end
+
+      % After all polygons were clipped, remove all relevant rows and columns
+      binOverlap(polsToClip,:) = [];
+      binOverlap(:,polsToClip) = [];
+
+      % Store back polygon
+      pols{cPolIdx} = cPol;
+    end
+
+    pols(clippedPolIdxs) = [];
     close(waitHdl);
 end
+
+
+

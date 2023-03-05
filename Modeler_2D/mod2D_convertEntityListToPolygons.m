@@ -46,10 +46,23 @@ function [pols,ignoredEnts] = mod2D_convertEntityListToPolygons(dxfEnts)
                                  (y(end) == cEntity.startPoint(2));
 
             if prevEndIsCurrStart
-                % If indeed this is a concatenated line,
-                % store the next endpoint
-                x = [x ; cEntity.endPoint(1)];
-                y = [y ; cEntity.endPoint(2)];
+                % Check that this isn't a direct continuity of the previous line
+                dr = cEntity.endPoint(1:2) - cEntity.startPoint(1:2);
+                dl = dr./sqrt(sum(dr(:).^2));
+
+                prev_dr = [x((end-1):end) y((end-1):end)];
+                prev_dr = prev_dr(2,:) - prev_dr(1,:);
+                prev_dl = prev_dr./sqrt(sum(prev_dr(:).^2));
+
+                if min(prev_dl(:) == dl(:))
+                    x(end) = cEntity.endPoint(1);
+                    y(end) = cEntity.endPoint(2);
+                else
+                    % If indeed this is a concatenated line,
+                    % store the next endpoint
+                    x = [x ; cEntity.endPoint(1)];
+                    y = [y ; cEntity.endPoint(2)];
+                end
             else
                 % However, if this is not, clear this polygon
                 % and throw a warning for a non-closed polygon

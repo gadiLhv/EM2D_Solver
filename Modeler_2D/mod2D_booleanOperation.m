@@ -35,10 +35,12 @@ function newPolStruct = mod2D_booleanOperation(pol1,pol2,opString)
     % TODO: Support circles
     % TODO: Suuport closed curves
 
-
+    newPolStruct = [];
     % Create polygon structure and update number of loops
+    if ~isempty(newPol)
+      newPolStruct = mod2D_createPolygonStruct(newPol(1:(end-1),1),newPol(1:(end-1),2));
+      newPolStruct.nParts = numberOfLoops;
+    end
 
-    newPolStruct = mod2D_createPolygonStruct(newPol(1:(end-1),1),newPol(1:(end-1),2));
-    newPolStruct.nParts = numberOfLoops;
 
 end
