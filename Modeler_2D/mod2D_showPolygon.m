@@ -3,6 +3,7 @@ function polHdl = mod2D_showPolygon(axHdl,polStruct,faceColor,edgeColor)
 
   % Set right the rotation directions (CCW, fill in, CW, fill out)
   [x,y] = polygon2patch(polStruct.x,polStruct.y);
+
   polHdl = patch (x,y, ...
                   'facecolor', faceColor, ...
                   'edgecolor', edgeColor);
