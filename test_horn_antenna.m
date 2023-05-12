@@ -29,7 +29,7 @@ simProps = cem2D_createSimPropsStruct(...
                 'polarizationType','TE');
 
 f_sim = 30;
-                
+
 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
               'relWLmeshMax',0.33, ...
@@ -52,7 +52,7 @@ horn_metal_thick = 0.8;
 topPanel = mod2D_createRectangleStruct([-0.5*horn_WG_L 0.5*horn_WG_H],[0.5*horn_WG_L 0.5*horn_WG_H+horn_metal_thick]);
 botPanel = mod2D_createRectangleStruct([-0.5*horn_WG_L -0.5*horn_WG_H-horn_metal_thick],[0.5*horn_WG_L -0.5*horn_WG_H]);
 
-% 
+%
 backPlate = mod2D_createRectangleStruct([0.5*horn_WG_L -0.5*horn_WG_H-horn_metal_thick],[0.5*horn_WG_L+horn_metal_thick 0.5*horn_WG_H+horn_metal_thick]);
 portLine = mod2D_createLineStruct([0.5*horn_WG_L -0.5*horn_WG_H-horn_metal_thick],[0.5*horn_WG_L 0.5*horn_WG_H+horn_metal_thick]);
 
@@ -92,7 +92,7 @@ material_PEC = cem2D_createMaterialDefs('name','PEC','type','PEC');
 materialList = cem2D_addMaterialToList(material_default);
 materialList = cem2D_addMaterialToList(material_PEC,materialList);
 
-% Create polygon list 
+% Create polygon list
 polList = {topPanel,botPanel,backPlate};
 % Assign materials per-shape
 materialAssignment = {'PEC','PEC','PEC'};
@@ -105,7 +105,7 @@ bBox = mod2D_createBoundingBox(...
         material_default);
 
 orig_bBox = bBox;
-        
+
 % Subtract all shapes from bounding box
 for polIdx = 1:numel(polList)
     bBox = mod2D_booleanOperation(bBox,polList{polIdx},'subtract');
@@ -151,15 +151,15 @@ patch('faces',meshData.tria(meshData.tnum == 1,1:3),'vertices',meshData.vert, ..
     'edgecolor',[0,0,0]) ;
 
 
-    
+
 % Plot lines
 lineIdxs = unique(meshData.lnum);
 for cLineIdx = lineIdxs(:).'
     cLineVertPairs = meshData.ltri(meshData.lnum == cLineIdx,:);
-    
+
     cLineR1 = meshData.vert(cLineVertPairs(:,1),:);
     cLineR2 = meshData.vert(cLineVertPairs(:,2),:);
-    
+
     plot([cLineR1(:,1) cLineR2(:,1)].',[cLineR1(:,2) cLineR2(:,2)].','-r','linewidth',3);
     plot(cLineR1(:,1),cLineR1(:,2),'.b','markersize',20);
     plot(cLineR2(:,1),cLineR2(:,2),'.g','markersize',10);
@@ -167,7 +167,7 @@ end
 
 hold(axHdl,'off');
 
-%mod2D_showPolyline(axHdl,portLine,[1 0 0]);    
+%mod2D_showPolyline(axHdl,portLine,[1 0 0]);
 
 portStruct = cem2D_createWaveguidePortStruct('polyLineNumber',1);
 
@@ -193,7 +193,7 @@ arrowHdl = quiver(  portStruct.portCenter(1),...
                     portStruct.portCenter(2),...
                     4*portStruct.portDirection(1)*portStruct.propDirection,...
                     4*portStruct.portDirection(2)*portStruct.propDirection);
-                    
+
 
 set(arrowHdl,'linewidth',3);
 set(arrowHdl,'color',[1 0.2 0.2]);
@@ -209,12 +209,12 @@ hold(axHdl,'off');
                     f_sim);
 
 
-% Extract the edges 
+% Extract the edges
 bbEdgeIdxs = mod2D_extractPolygonEdges(...
                 meshData,...
                 meshProps,...
                 orig_bBox);
-               
+
 % Assign to outline the 2nd order radiating boundary conditions
 [K_rad,b_rad] = cem2D_createKmatBvect_2ndOrderRadCond(...
                     meshData,...                % Mesh to use for final matrix
@@ -233,7 +233,7 @@ bbEdgeIdxs = mod2D_extractPolygonEdges(...
                     materialAssignment,...
                     simProps,...
                     f_sim);
-                    
+
 K = K_rad + K_port + K_mat;
 b = b_rad + b_port + b_mat;
 
