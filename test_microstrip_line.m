@@ -7,8 +7,11 @@ clc
 clear
 close all
 
+pkg load geometry
+pkg load miscellaneous
+
 modelerPath = './Modeler_2D';
-mesherPath = '/home/gadi/Repositories/mesh2d';
+mesherPath = '../mesh2d';
 meshWrapperPath = './Mesh_2D';
 solver2DPath = './Solver_2D';
 solver1DPath = './Solver_1D';
@@ -26,7 +29,7 @@ simProps = cem2D_createSimPropsStruct(...
                 'fMin',0.1,...
                 'fMax',5,...
                 'polarizationType','TE');
-                
+
                 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
               'relWLmeshMax',0.33, ...
@@ -34,11 +37,16 @@ meshProps = mesh2D_createMeshPropsStruct(...
               'algorithmType','delfront',...
               'maxRadiusEdgeRatio',1.25);
 
+% Unless overridden, f_sim will be set to the average between fMin and fMax
+% f_sim = 3;
+
 % Line Properties
 Line_W = 0.2;
 Sub_Thick = 0.4;
 Sub_W = Line_W*8;
 Metal_Thick = 0.052;
+
+
 
 linePanel = mod2D_createRectangleStruct([-0.5*Line_W Metal_Thick+Sub_Thick],[0.5*Line_W Metal_Thick*2+Sub_Thick]);
 gndPanel = mod2D_createRectangleStruct([-0.5*Sub_W 0],[0.5*Sub_W Metal_Thick]);
@@ -57,7 +65,7 @@ materialList = cem2D_addMaterialToList(material_PEC,materialList);
 materialList = cem2D_addMaterialToList(material_FR4,materialList);
 
 
-% Create polygon list 
+% Create polygon list
 polList = {substrate,linePanel,gndPanel};
 
 % Subtract all shapes from bounding box
@@ -102,6 +110,15 @@ meshData = mesh2D_generateInitialMesh(...
 
 % Smooth the mesh
 meshData = mesh2D_smoothMesh(meshData,meshProps);
+
+if exist('f_sim','var')
+    if isempty(f_sim)
+        f_sim = 0.5*(simProps.fMin + simProps.fMax);
+    end
+else
+    f_sim = 0.5*(simProps.fMin + simProps.fMax);
+end
+[A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
 
 hold(axHdl,'on');
 
