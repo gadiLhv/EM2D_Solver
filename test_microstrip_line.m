@@ -32,28 +32,26 @@ simProps = cem2D_createSimPropsStruct(...
 
                 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
-              'relWLmeshMax',0.33, ...
+              'relWLmeshMax',0.05, ...
               'boundingBoxAddSpace',1, ...
               'algorithmType','delfront',...
-              'maxRadiusEdgeRatio',1.25);
+              'maxRadiusEdgeRatio',1.5);
 
 % Unless overridden, f_sim will be set to the average between fMin and fMax
 % f_sim = 3;
 
 % Line Properties
-Line_W = 0.2;
+Line_W = 0.35;
 Sub_Thick = 0.4;
 Sub_W = Line_W*8;
 Metal_Thick = 0.052;
-
-
 
 linePanel = mod2D_createRectangleStruct([-0.5*Line_W Metal_Thick+Sub_Thick],[0.5*Line_W Metal_Thick*2+Sub_Thick]);
 gndPanel = mod2D_createRectangleStruct([-0.5*Sub_W 0],[0.5*Sub_W Metal_Thick]);
 
 substrate = mod2D_createRectangleStruct([-0.5*Sub_W Metal_Thick],[0.5*Sub_W Metal_Thick+Sub_Thick]);
 
-bbox = mod2D_createRectangleStruct([-0.5*Sub_W Metal_Thick+Sub_Thick],[0.5*Sub_W Metal_Thick + Sub_Thick*3]);
+bbox = mod2D_createRectangleStruct([-0.5*Sub_W Metal_Thick+Sub_Thick],[0.5*Sub_W Metal_Thick + Sub_Thick*5]);
 
 % Create the materials for this simulation
 material_default = cem2D_createMaterialDefs;
@@ -63,7 +61,6 @@ material_FR4 = cem2D_createMaterialDefs('name','FR4','type','normal','er',4.3);
 materialList = cem2D_addMaterialToList(material_default);
 materialList = cem2D_addMaterialToList(material_PEC,materialList);
 materialList = cem2D_addMaterialToList(material_FR4,materialList);
-
 
 % Create polygon list
 polList = {substrate,linePanel,gndPanel};
@@ -119,6 +116,10 @@ else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
 [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+
+[e_v,lambda] = eig(B\A);
+
+kz2 = -diag(lambda);
 
 hold(axHdl,'on');
 
