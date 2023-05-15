@@ -26,13 +26,13 @@ addpath(miscPath);
 
 % Simulation properties
 simProps = cem2D_createSimPropsStruct(...
-                'fMin',0.1,...
-                'fMax',5,...
+                'fMin',1.5,...
+                'fMax',3.5,...
                 'polarizationType','TE');
 
                 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
-              'relWLmeshMax',0.05, ...
+              'relWLmeshMax',0.1, ...
               'boundingBoxAddSpace',1, ...
               'algorithmType','delfront',...
               'maxRadiusEdgeRatio',1.5);
@@ -41,19 +41,11 @@ meshProps = mesh2D_createMeshPropsStruct(...
 % f_sim = 3;
 
 % Line Properties
-Line_W = 0.35;
-Sub_Thick = 0.4;
-Sub_W = Line_W*8;
-Metal_Thick = 0.052;
 
-warning off;
+WG_H = 55;
+WG_W = 110;
 
-linePanel = mod2D_createRectangleStruct([-0.5*Line_W Metal_Thick+Sub_Thick],[0.5*Line_W Metal_Thick*2+Sub_Thick]);
-gndPanel = mod2D_createRectangleStruct([-0.5*Sub_W 0],[0.5*Sub_W Metal_Thick]);
-
-substrate = mod2D_createRectangleStruct([-0.5*Sub_W Metal_Thick],[0.5*Sub_W Metal_Thick+Sub_Thick]);
-
-bbox = mod2D_createRectangleStruct([-0.5*Sub_W Metal_Thick+Sub_Thick],[0.5*Sub_W Metal_Thick + Sub_Thick*5]);
+WG_Box = mod2D_createRectangleStruct([-0.5*WG_W 0],[0.5*WG_W WG_H]);
 
 % Create the materials for this simulation
 material_default = cem2D_createMaterialDefs;
@@ -65,18 +57,10 @@ materialList = cem2D_addMaterialToList(material_PEC,materialList);
 materialList = cem2D_addMaterialToList(material_FR4,materialList);
 
 % Create polygon list
-polList = {substrate,linePanel,gndPanel};
-
-% Subtract all shapes from bounding box
-for polIdx = 1:numel(polList)
-    bbox = mod2D_booleanOperation(bbox,polList{polIdx},'subtract');
-end
-
-% Add bounding box to polygon list
-polList = [{bbox} polList];
+polList = {WG_Box};
 
 % Assign materials per-shape
-materialAssignement = {'default','FR4','PEC','PEC'};
+materialAssignement = {'default'};
 
 
 %%%%%%%%%%%%%%%%%%%%%
@@ -84,10 +68,7 @@ materialAssignement = {'default','FR4','PEC','PEC'};
 %%%%%%%%%%%%%%%%%%%%%
 figHdl = figure;
 axHdl = axes;
-mod2D_showPolygon(axHdl,bbox,[1 1 1],[0 0 0]);
-mod2D_showPolygon(axHdl,substrate,[0 0.7 0],[0 0 0]);
-mod2D_showPolygon(axHdl,linePanel,[255 165 0]/255,[0 0 0]);
-mod2D_showPolygon(axHdl,gndPanel,[255 165 0]/255,[0 0 0]);
+mod2D_showPolygon(axHdl,WG_Box,[1 1 1],[0 0 0]);
 
 set(gca,'fontsize',14);
 xlabel('\xi [mm]','fontsize',16);
@@ -110,7 +91,6 @@ meshData = mesh2D_generateInitialMesh(...
 % Smooth the mesh
 meshData = mesh2D_smoothMesh(meshData,meshProps);
 
-
 if exist('f_sim','var')
     if isempty(f_sim)
         f_sim = 0.5*(simProps.fMin + simProps.fMax);
@@ -131,7 +111,7 @@ kz2 = -diag(lambda);
 c0 = physical_constant('speed of light in vacuum');
 kc2 = (2*pi*f_sim*1e9/c0)^2 - kz2;
 
-[kc2,sortIdxs] = sort(real(sqrt(kc2)));
+[kc2,sortIdxs] = sort(abs(kc2));
 kz2 = kz2(sortIdxs);
 e_v = e_v(:,sortIdxs);
 
@@ -144,12 +124,9 @@ for tIdx = unique(meshData.tnum).'
 end
 
 [edgeIdxs,nEdges,edgeCent] = mesh2D_createEdgeIndexing(meshData);
-%e0 = 20*log10(abs(e_v(1:size(e_v,1)/2,1)));
-e0 = 20*log10(abs(e_v(:,4)));
+e0 = 20*log10(abs(e_v(:,1)));
 colormap('jet');
 scatter(edgeCent(:,1),edgeCent(:,2),40,e0,'filled');
 
 
 hold(axHdl,'off');
-
-warning on;

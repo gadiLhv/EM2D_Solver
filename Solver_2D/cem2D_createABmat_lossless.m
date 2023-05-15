@@ -19,18 +19,7 @@ function [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,mate
 
     vert_m = units(simProps.lengthUnits,'m',meshData.vert);
 
-    tris = meshData.tria;
-    % Convert vertex list to edge list
-    edge_m = [[tris(:,2) tris(:,1)] ; [tris(:,3) tris(:,2)] ; [tris(:,1) tris(:,3)]];
-
-    % Determine unique edges
-    edge_sorted = sort(edge_m,2);
-    [uEdges,~,uIdxs] = unique(edge_sorted,'rows');
-
-    % Re-assign from edges to triangles
-    e2tri = mod(uIdxs - 1,size(tris,1)) + 1;
-
-    nEdges = size(uEdges,1);
+    [eIdxs,nEdges,~] = mesh2D_createEdgeIndexing(meshData);
 
     % Initial FEM matrix and source vector
     A = zeros([1 1]*nEdges);
@@ -61,6 +50,7 @@ function [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,mate
         triBinMap = meshData.tnum == faceIdx;
         % Store all triplets
         triTriplets = meshData.tria(triBinMap,:);
+        edgeTripliets = eIdxs(triBinMap,:);
 
         % Calculate edge lengths
         eL = cem_calcEdgeLengths(vert_m,triTriplets);
@@ -126,19 +116,24 @@ function [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,mate
 
         % Iteratively add sub-matrices
         for e = 1:size(Ae,3)
-            eIdxs = triTriplets(e,:);
-            A(eIdxs,eIdxs) = A(eIdxs,eIdxs) + Ae(:,:,e);
-            B_tt(eIdxs,eIdxs) = B_tt(eIdxs,eIdxs) + Be_tt(:,:,e);
-            B_tz(eIdxs,eIdxs) = B_tz(eIdxs,eIdxs) + Be_tz(:,:,e);
-            B_zt(eIdxs,eIdxs) = B_zt(eIdxs,eIdxs) + Be_zt(:,:,e);
-            B_zz(eIdxs,eIdxs) = B_zz(eIdxs,eIdxs) + Be_zz(:,:,e);
+            ceIdxs = edgeTripliets(e,:);
+            A(ceIdxs,ceIdxs) = A(ceIdxs,ceIdxs) + Ae(:,:,e);
+            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e);
+            B_tz(ceIdxs,ceIdxs) = B_tz(ceIdxs,ceIdxs) + Be_tz(:,:,e);
+            B_zt(ceIdxs,ceIdxs) = B_zt(ceIdxs,ceIdxs) + Be_zt(:,:,e);
+            B_zz(ceIdxs,ceIdxs) = B_zz(ceIdxs,ceIdxs) + Be_zz(:,:,e);
         end
 
     end % Per-face for loop
 
     Zz = zeros(size(A));
-    A = [A Zz ; Zz Zz];
-    B = [B_tt B_tz ; B_zt B_zz];
+
+%    A = [A Zz ; Zz Zz];
+%    B = [B_tt B_tz ; B_zt B_zz];
+
+    A = A;
+
+    B = B_tz*inv(B_zz)*B_zt - B_tt;
 
 end % For main function, "cem2D_createABmat_lossless"
 
