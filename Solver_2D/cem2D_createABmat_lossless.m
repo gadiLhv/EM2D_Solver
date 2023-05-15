@@ -18,7 +18,19 @@ function [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,mate
     k0 = 2*pi*f_sim/c0;
 
     vert_m = units(simProps.lengthUnits,'m',meshData.vert);
-    nEdges = size(meshData.tria,1);
+
+    tris = meshData.tria;
+    % Convert vertex list to edge list
+    edge_m = [[tris(:,2) tris(:,1)] ; [tris(:,3) tris(:,2)] ; [tris(:,1) tris(:,3)]];
+
+    % Determine unique edges
+    edge_sorted = sort(edge_m,2);
+    [uEdges,~,uIdxs] = unique(edge_sorted,'rows');
+
+    % Re-assign from edges to triangles
+    e2tri = mod(uIdxs - 1,size(tris,1)) + 1;
+
+    nEdges = size(uEdges,1);
 
     % Initial FEM matrix and source vector
     A = zeros([1 1]*nEdges);
