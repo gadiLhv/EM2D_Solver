@@ -13,16 +13,44 @@ function fI = cem2D_vectorElementInterp(vert,triTriplets,edgeTriplets,edgeVals)
     eL = cem_calcEdgeLengths(vert,triTriplets);
 
     % Define interpolant
-    fI = @(xI,yI) triInterpolant_1st(X,Y,f,dTri,a,b,c,Det,xI,yI);
+    fI = @(xI,yI) triInterpolant_1st(vert,f,dTri,eIdxs,xI,yI);
 
 end
 
-function fI = vectInterpolant_1st(vert,dTri,a,b,c,Det,xI,yI);
-    vert_m = [r1 ; r2 ; r3];
-    [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert_m,[1 2 3]);
-    l1 = sqrt(sum((r2 - r1).^2,2));
-    l2 = sqrt(sum((r3 - r2).^2,2));
-    l3 = sqrt(sum((r1 - r3).^2,2));
+function fI = vectInterpolant_1st(vert,dTri,f_e,xI,yI);
+% vert - All nodes
+% dTri - Triangle node assignments
+% f_e  - edge element coefficients
+% xI,yI - Values to interpolate
+
+    % Initialize
+    fI = zeros(size(xI));
+
+    % Find in which triangle is each
+    triIdx = cem2D_pointInTri(vert,dTri,xI,yI);
+
+    % Put NaNs for points not in mesh (perhaps zero is a better choice)
+    fI(isnan(triIdx)) = NaN;
+
+    % Note all points in mesh
+    inMeshIdxs = find(~isnan(triIdx));
+
+    % Interpolation coefficients
+    [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert_m,dTri);
+
+    meshData.vert = vert;
+    meshData.tria = dTri;
+    [eIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData);
+
+    % lengths of all edges
+    eL = cem_calcEdgeLengths(vert,dTri);
+
+    % Extract ABCs and Determinant
+    ai = a(triIdx(inMeshIdxs),:);
+    bi = b(triIdx(inMeshIdxs),:);
+    ci = c(triIdx(inMeshIdxs),:);
+    Di = Det(triIdx(inMeshIdxs));
+
 
     Li = @(i,x,y) (1/(2*Det))*(a(i) + b(i)*x + c(i)*y);
     dLidx = @(i,x,y) b(i);
