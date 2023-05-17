@@ -143,12 +143,11 @@ for tIdx = unique(meshData.tnum).'
         'edgecolor',[0,0,0]) ;
 end
 
-[edgeIdxs,nEdges,edgeCent] = mesh2D_createEdgeIndexing(meshData);
-%e0 = 20*log10(abs(e_v(1:size(e_v,1)/2,1)));
-e0 = 20*log10(abs(e_v(:,4)));
-colormap('jet');
-scatter(edgeCent(:,1),edgeCent(:,2),40,e0,'filled');
-
+%[edgeIdxs,nEdges,edgeCent] = mesh2D_createEdgeIndexing(meshData);
+%
+%e0 = 20*log10(abs(e_v(:,4)));
+%colormap('jet');
+%scatter(edgeCent(:,1),edgeCent(:,2),40,e0,'filled');
 
 hold(axHdl,'off');
 

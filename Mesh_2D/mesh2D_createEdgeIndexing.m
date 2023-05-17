@@ -1,4 +1,4 @@
-function [edgeIdxs,nEdges,edgeCent] = mesh2D_createEdgeIndexing(meshData)
+function [edgeIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData)
 
 vert_m = meshData.vert;
 tris = meshData.tria;
@@ -16,6 +16,10 @@ edgeCent_y = [  0.5*(vert_m(tris(:,2),2) + vert_m(tris(:,1),2)) ; ...
 % Determine unique edges
 edge_sorted = sort(edge_m,2);
 [uEdges,uIdxs,eIdxs] = unique(edge_sorted,'rows');
+% uEdges - List of unique edge pairs
+% uIdxs - A list of the unique edges extracted from the entire edge list
+% eIdxs - Assignment of edges to triangles. Namely, edge triplets.
+
 nEdges = size(uEdges,1);
 
 % Now I have a list that tells the triangle edge indexing. Namely, edge
@@ -26,7 +30,7 @@ edgeIdxs = reshape(eIdxs,[],3);
 
 % Edges have different directions in various triangles, hence it is required
 % to store them again (maybe)
-edgeCent = [edgeCent_x(uIdxs) edgeCent_y(uIdxs)];
+%edgeCent = [edgeCent_x(uIdxs) edgeCent_y(uIdxs)];
 
 end
 

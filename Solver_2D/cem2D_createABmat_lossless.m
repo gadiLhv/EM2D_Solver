@@ -19,7 +19,7 @@ function [A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,mate
 
     vert_m = units(simProps.lengthUnits,'m',meshData.vert);
 
-    [eIdxs,nEdges,~] = mesh2D_createEdgeIndexing(meshData);
+    [eIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData);
 
     % Initial FEM matrix and source vector
     A = zeros([1 1]*nEdges);
