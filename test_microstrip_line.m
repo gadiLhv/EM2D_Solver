@@ -110,7 +110,6 @@ meshData = mesh2D_generateInitialMesh(...
 % Smooth the mesh
 meshData = mesh2D_smoothMesh(meshData,meshProps);
 
-
 if exist('f_sim','var')
     if isempty(f_sim)
         f_sim = 0.5*(simProps.fMin + simProps.fMax);
@@ -118,22 +117,11 @@ if exist('f_sim','var')
 else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
-[A,B] = cem2D_createABmat_lossless(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
-
-Kmat = B\A;
-
-[e_v,lambda] = eig(Kmat);
-
-kz2 = -diag(lambda);
+[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
 
 % Search for solutions with lowest cutoff.
 
 c0 = physical_constant('speed of light in vacuum');
-kc2 = (2*pi*f_sim*1e9/c0)^2 - kz2;
-
-[kc2,sortIdxs] = sort(real(sqrt(kc2)));
-kz2 = kz2(sortIdxs);
-e_v = e_v(:,sortIdxs);
 
 hold(axHdl,'on');
 
@@ -143,10 +131,22 @@ for tIdx = unique(meshData.tnum).'
         'edgecolor',[0,0,0]) ;
 end
 
-%[edgeIdxs,nEdges,edgeCent] = mesh2D_createEdgeIndexing(meshData);
-%
-%e0 = 20*log10(abs(e_v(:,4)));
-%colormap('jet');
+[Xm,Ym] = meshgrid(linspace(-0.5*Sub_W,0.5*Sub_W,25),linspace(0,Metal_Thick + Sub_Thick*5,15));
+
+EI = cem2D_vectorElementInterp(...
+    meshData.vert,...
+    meshData.tria,...
+    edgeTriplets,...
+    Et(:,2));
+
+Exy = EI(Xm,Ym);
+
+%Eabs = sqrt(sum(abs(Exy).^2,2));
+
+
+
+qHdl = quiver(Xm(:),Ym(:),abs(Exy(:,1)),abs(Exy(:,2)));
+set(qHdl,'color',[1 0 0]);
 %scatter(edgeCent(:,1),edgeCent(:,2),40,e0,'filled');
 
 hold(axHdl,'off');
