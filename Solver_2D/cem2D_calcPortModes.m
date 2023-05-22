@@ -91,22 +91,23 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
                     Be_tz_21 Be_tz_22 Be_tz_23 ; ...
                     Be_tz_31 Be_tz_32 Be_tz_33];
 
-%        Be_zt = permute(Be_tz,[2 1 3]);
-        Be_zt_11 = (imr*eL(1,:,:)./(Det*12)).*(f(1,2) - f(1,1));
-        Be_zt_12 = (imr*eL(2,:,:)./(Det*12)).*(f(1,3) - f(1,2));
-        Be_zt_13 = (imr*eL(3,:,:)./(Det*12)).*(f(1,1) - f(1,3));
-
-        Be_zt_21 = (imr*eL(1,:,:)./(Det*12)).*(f(2,2) - f(2,1));
-        Be_zt_22 = (imr*eL(2,:,:)./(Det*12)).*(f(2,3) - f(2,2));
-        Be_zt_23 = (imr*eL(3,:,:)./(Det*12)).*(f(2,1) - f(2,3));
-
-        Be_zt_31 = (imr*eL(1,:,:)./(Det*12)).*(f(3,2) - f(3,1));
-        Be_zt_32 = (imr*eL(2,:,:)./(Det*12)).*(f(3,3) - f(3,2));
-        Be_zt_33 = (imr*eL(3,:,:)./(Det*12)).*(f(3,1) - f(3,3));
-
-        Be_zt = [   Be_zt_11 Be_zt_12 Be_zt_13 ; ...
-                    Be_zt_21 Be_zt_22 Be_zt_23 ; ...
-                    Be_zt_31 Be_zt_32 Be_zt_33];
+        Be_zt = permute(Be_tz,[2 1 3]);
+%        Be_zt = Be_tz;
+%        Be_zt_11 = (imr*eL(1,:,:)./(Det*12)).*(f(1,2) - f(1,1));
+%        Be_zt_12 = (imr*eL(2,:,:)./(Det*12)).*(f(1,3) - f(1,2));
+%        Be_zt_13 = (imr*eL(3,:,:)./(Det*12)).*(f(1,1) - f(1,3));
+%
+%        Be_zt_21 = (imr*eL(1,:,:)./(Det*12)).*(f(2,2) - f(2,1));
+%        Be_zt_22 = (imr*eL(2,:,:)./(Det*12)).*(f(2,3) - f(2,2));
+%        Be_zt_23 = (imr*eL(3,:,:)./(Det*12)).*(f(2,1) - f(2,3));
+%
+%        Be_zt_31 = (imr*eL(1,:,:)./(Det*12)).*(f(3,2) - f(3,1));
+%        Be_zt_32 = (imr*eL(2,:,:)./(Det*12)).*(f(3,3) - f(3,2));
+%        Be_zt_33 = (imr*eL(3,:,:)./(Det*12)).*(f(3,1) - f(3,3));
+%
+%        Be_zt = [   Be_zt_11 Be_zt_12 Be_zt_13 ; ...
+%                    Be_zt_21 Be_zt_22 Be_zt_23 ; ...
+%                    Be_zt_31 Be_zt_32 Be_zt_33];
 
         % And finally, cross-pol elements:
         Be_zz = zeros([3 3 numel(Det)]);
@@ -136,11 +137,10 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     nonBoundaryEdges = uIdxs;
     nonBoundaryEdges(boundaryEdges) = [];
 
-    [inWhichTri,whichEdge] = find(sum(eIdxs == permute(boundaryEdges,[3 2 1]),3));
-
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Debug: Find boundary nodes, to impose Dirichlet boundary conditions %
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    [inWhichTri,whichEdge] = find(sum(eIdxs == permute(boundaryEdges,[3 2 1]),3));
 %    figure;
 %    for tIdx = unique(meshData.tnum).'
 %        patch(  'faces',meshData.tria(meshData.tnum == tIdx,1:3),'vertices',meshData.vert, ...
@@ -166,27 +166,26 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     % End Debug %
     %%%%%%%%%%%%%
 
-    A = removeBoundaryNodes(A,boundaryEdges);
-    B_tt = removeBoundaryNodes(B_tt,boundaryEdges);
-    B_tz = removeBoundaryNodes(B_tz,boundaryEdges);
-    B_zt = removeBoundaryNodes(B_zt,boundaryEdges);
-    B_zz = removeBoundaryNodes(B_zz,boundaryEdges);
+%    A = removeBoundaryEdges(A,boundaryEdges);
+%    B_tt = removeBoundaryEdges(B_tt,boundaryEdges);
+%    B_tz = removeBoundaryEdges(B_tz,boundaryEdges);
+%    B_zt = removeBoundaryEdges(B_zt,boundaryEdges);
+%    B_zz = removeBoundaryEdges(B_zz,boundaryEdges);
 
-    % On edges that are PEC (single sided edges), remove fields
-    % Option 1: Only Et
-%    A = A;
-%    B = B_tz*inv(B_zz)*B_zt - B_tt;
-
-%    A = removeBoundaryNodes(A,boundaryEdges);
-%    B = removeBoundaryNodes(B,boundaryEdges);
-
-    Zz = zeros(size(A));
-    A = [A Zz ; Zz Zz];
-    B = [B_tt B_tz ; B_zt B_zz];
 
     %%%%%%%%%%%%
     % Option 1 %
     %%%%%%%%%%%%
+
+%    % On edges that are PEC (single sided edges), remove fields
+%    % Option 1: Only Et
+%    A = A;
+%    B = B_tz*inv(B_zz)*B_zt - B_tt;
+%
+%%    A = removeBoundaryEdges(A,boundaryEdges);
+%%    B = removeBoundaryEdges(B,boundaryEdges);
+%
+%
 %    [Et,lambda] = eig(B\A,'vector');
 %
 %    Et_pad = zeros([nEdges size(Et,2)]);
@@ -224,29 +223,38 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     %%%%%%%%%%%%
     % Option 2 %
     %%%%%%%%%%%%
+
+    Zz = zeros(size(A));
+    A = [A Zz ; Zz Zz];
+    B = [B_tt B_tz ; B_zt B_zz];
+
     [EtEz,lambda] = eig(B\A,'vector');
 
     Et = EtEz(1:(size(EtEz,1)/2),:);
     Ez = EtEz(((size(EtEz,1)/2)+1):end,:);
 
-    Et_pad = zeros([nEdges size(Et,2)]);
-    Et_pad(nonBoundaryEdges,:) = Et;
-    Et = Et_pad;
-    Ez_pad = zeros([nEdges size(Ez,2)]);
-    Ez_pad(nonBoundaryEdges,:) = Ez;
-    Ez = Ez_pad;
-    clear('Et_pad','Ez_pad');
+%    Et_pad = zeros([nEdges size(Et,2)]);
+%    Et_pad(nonBoundaryEdges,:) = Et;
+%    Et = Et_pad;
+%    Ez_pad = zeros([nEdges size(Ez,2)]);
+%    Ez_pad(nonBoundaryEdges,:) = Ez;
+%    Ez = Ez_pad;
+%    clear('Et_pad','Ez_pad');
 
     % Delete first half
     lambda(1:(size(Ez,1))) = [];
     Et(:,1:(size(Ez,1))) = [];
     Ez(:,1:(size(Ez,1))) = [];
 
-    kz2 = -lambda;
+    kz2 = -real(lambda);
     kc2 = (2*pi*f_sim/c0)^2 - kz2;
+
+    badFc = kc2 < 0;
+    kc2 = kc2(~badFc);
+    Et = Et(:,~badFc);
+    Ez = Ez(:,~badFc);
+
     fc = sqrt(kc2)*c0/(2*pi);
-
-
 
     % Dump all imaginary fc (namely, negative wavenumbers)
     fc_Th = 0.01;
@@ -284,7 +292,7 @@ function cE = Ee(edgeL,detE)
 
 end
 
-function A = removeBoundaryNodes(A,i)
+function A = removeBoundaryEdges(A,i)
     A(:,i) = [];
     A(i,:) = [];
 end
