@@ -4,6 +4,7 @@
 % test_horn_antenna.m
 
 warning off;
+
 clc
 clear
 close all
@@ -27,8 +28,8 @@ addpath(miscPath);
 
 % Simulation properties
 simProps = cem2D_createSimPropsStruct(...
-                'fMin',0.1,...
-                'fMax',5,...
+                'fMin',1,...
+                'fMax',3.5,...
                 'polarizationType','TE');
 
                 % Global mesh properties
@@ -51,11 +52,11 @@ WG_Box = mod2D_createRectangleStruct([-0.5*WG_W 0],[0.5*WG_W WG_H]);
 % Create the materials for this simulation
 material_default = cem2D_createMaterialDefs;
 material_PEC = cem2D_createMaterialDefs('name','PEC','type','PEC');
-material_FR4 = cem2D_createMaterialDefs('name','FR4','type','normal','er',4.3);
+%material_FR4 = cem2D_createMaterialDefs('name','FR4','type','normal','er',4.3);
 % Create the material list with only the default material
 materialList = cem2D_addMaterialToList(material_default);
 materialList = cem2D_addMaterialToList(material_PEC,materialList);
-materialList = cem2D_addMaterialToList(material_FR4,materialList);
+%materialList = cem2D_addMaterialToList(material_FR4,materialList);
 
 % Create polygon list
 polList = {WG_Box};
@@ -100,8 +101,16 @@ else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
 
-[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+%[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+%[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+%[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
+[fc_TE,fc_TM,Ete,Htm,edgeTriplets] = cem2D_calcModesByCutoff_TETM(meshData,meshProps,materialList,materialAssignement,simProps);
 
+c0 = physical_constant('speed of light in vacuum');
+kc_TE = 2*pi*fc_TE/c0;
+kc_TM = 2*pi*fc_TM/c0;
+ref_TE = kc_TE*(WG_W/1000);
+ref_TM = kc_TM*(WG_W/1000);
 hold(axHdl,'on');
 
 for tIdx = unique(meshData.tnum).'
@@ -116,7 +125,7 @@ EI = cem2D_vectorElementInterp(...
     meshData.vert,...
     meshData.tria,...
     edgeTriplets,...
-    Et(:,1));
+    Ete(:,1));
 
 Exy = EI(Xm,Ym);
 

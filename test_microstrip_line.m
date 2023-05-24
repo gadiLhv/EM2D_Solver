@@ -1,7 +1,9 @@
+
 % test_microstrip_line.m
 
 
 % test_horn_antenna.m
+warning off;
 
 clc
 clear
@@ -117,7 +119,8 @@ if exist('f_sim','var')
 else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
-[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+%[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
 
 % Search for solutions with lowest cutoff.
 

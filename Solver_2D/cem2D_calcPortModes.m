@@ -72,7 +72,7 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
         c = permute(c,[2 3 1]);
 
         % "f" elements defined in page 242, "Finite element method in electromagnetics", 1st edition.
-        f = @(i,j) b(i,:,:).*b(j,:,:) + c(i,:,:).*c(j,:,:);
+        f = @(i,j) (b(i,:,:).*b(j,:,:) + c(i,:,:).*c(j,:,:));
 
         % Trans-pol matrices
         Be_tz_11 = (imr*eL(1,:,:)./(Det*12)).*(f(2,1) - f(1,1));
@@ -92,6 +92,7 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
                     Be_tz_31 Be_tz_32 Be_tz_33];
 
         Be_zt = permute(Be_tz,[2 1 3]);
+
 %        Be_zt = Be_tz;
 %        Be_zt_11 = (imr*eL(1,:,:)./(Det*12)).*(f(1,2) - f(1,1));
 %        Be_zt_12 = (imr*eL(2,:,:)./(Det*12)).*(f(1,3) - f(1,2));
