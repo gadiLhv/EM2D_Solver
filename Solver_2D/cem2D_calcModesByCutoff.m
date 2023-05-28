@@ -18,14 +18,28 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcModesByCutoff(meshData,meshProps,
 %    k0 = 2*pi*f_sim/c0;
 
     vert_m = units(simProps.lengthUnits,'m',meshData.vert);
+    nNodes = size(vert_m,1);
 
     [eIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData);
 
     % Initial FEM matrix and source vector
     A_tt = zeros([1 1]*nEdges);
-    A_zz = A_tt;
+    A_zz = zeros([1 1]*nNodes);
     B_tt = A_tt;
-    B_zz = A_tt;
+    B_zz = A_zz;
+
+    % Find all edges existant in only one triangle, namely, boundary nodes
+    uIdxs = 1:nEdges;
+    howManyTris = sum(sum(bsxfun(@eq,permute(eIdxs,[1 3 2]),uIdxs),3),1);
+
+    boundaryEdges = find(howManyTris(:) == 1);
+    nonBoundaryEdges = uIdxs;
+    nonBoundaryEdges(boundaryEdges) = [];
+
+    uNodeIdxs = 1:size(meshData.vert,1);
+    boundaryNodes = unique(meshData.etri(:));
+    nonBoundaryNodes = uNodeIdxs;
+    nonBoundaryNodes(boundaryNodes) = [];
 
     % Build matrix face by face
     for faceIdx = 1:numel(meshData.face)
@@ -51,9 +65,8 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcModesByCutoff(meshData,meshProps,
         triTriplets = meshData.tria(triBinMap,:);
         edgeTripliets = eIdxs(triBinMap,:);
 
-
         % Calculate edge lengths
-        eL = cem_calcEdgeLengths(vert_m,triTriplets);
+        eL = cem2D_calcEdgeLengths(vert_m,triTriplets);
 
         % Create interpolants for elements
         [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert_m,triTriplets);
@@ -90,21 +103,24 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcModesByCutoff(meshData,meshProps,
         % Iteratively add sub-matrices
         for e = 1:size(Ae_tt,3)
             ceIdxs = edgeTripliets(e,:);
+
+            % Mask boundary nodes
+%            binIsBoundary = sum(boundaryEdges(:) == ceIdxs(:).',1) ~= 0;
+
             A_tt(ceIdxs,ceIdxs) = A_tt(ceIdxs,ceIdxs) + Ae_tt(:,:,e);
-            A_zz(ceIdxs,ceIdxs) = A_zz(ceIdxs,ceIdxs) + Ae_zz(:,:,e);
+
             B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e);
-            B_zz(ceIdxs,ceIdxs) = B_zz(ceIdxs,ceIdxs) + Be_zz(:,:,e);
+        end
+
+        for n = 1:size(Ae_zz,3)
+            cnIdxs = meshData.tria(n,:);
+
+            A_zz(cnIdxs,cnIdxs) = A_zz(cnIdxs,cnIdxs) + Ae_zz(:,:,n);
+            B_zz(cnIdxs,cnIdxs) = A_zz(cnIdxs,cnIdxs) + Ae_zz(:,:,n);
         end
 
     end % Per-face for loop
 
-    % Find all edges existant in only one triangle, namely, boundary nodes
-    uIdxs = 1:nEdges;
-    howManyTris = sum(sum(bsxfun(@eq,permute(eIdxs,[1 3 2]),uIdxs),3),1);
-
-    boundaryEdges = find(howManyTris(:) == 1);
-    nonBoundaryEdges = uIdxs;
-    nonBoundaryEdges(boundaryEdges) = [];
 
     %%%%%%%%%%%%%%%%%%%%%%%%%
     % Remove boundary nodes
@@ -112,38 +128,43 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcModesByCutoff(meshData,meshProps,
 
     A_tt = removeBoundaryEdges(A_tt,boundaryEdges);
     B_tt = removeBoundaryEdges(B_tt,boundaryEdges);
-    A_zz = removeBoundaryEdges(A_zz,boundaryEdges);
-    B_zz = removeBoundaryEdges(B_zz,boundaryEdges);
+    A_zz = removeBoundaryEdges(A_zz,boundaryNodes);
+    B_zz = removeBoundaryEdges(B_zz,boundaryNodes);
 
     %%%%%%%%%%%%
     % Option 2 %
     %%%%%%%%%%%%
 
-    Zz = zeros(size(A_tt));
-    A = [A_tt Zz ; Zz A_zz];
-    B = [B_tt Zz ; Zz B_zz];
+    Zz_TR = zeros([size(A_tt,1) size(A_zz,2)]);
+    Zz_BL = Zz_TR.';
+    A = [A_tt Zz_TR ; Zz_BL A_zz];
+    B = [B_tt Zz_TR ; Zz_BL B_zz];
 
     [EtEz,lambda] = eig(B\A,'vector');
 
-    Et = EtEz(1:(size(EtEz,1)/2),:);
-    Ez = EtEz(((size(EtEz,1)/2)+1):end,:);
+    nTE = size(A_tt,1);
+
+    Et = EtEz(1:size(A_tt,1),:);
+    Ez = EtEz((size(A_tt,1) + 1):end,:);
 
     Et_pad = zeros([nEdges size(Et,2)]);
     Et_pad(nonBoundaryEdges,:) = Et;
     Et = Et_pad;
-    Ez_pad = zeros([nEdges size(Ez,2)]);
-    Ez_pad(nonBoundaryEdges,:) = Ez;
+    Ez_pad = zeros([size(meshData.vert,1) size(Ez,2)]);
+    Ez_pad(nonBoundaryNodes,:) = Ez;
     Ez = Ez_pad;
-    clear('Et_pad','Ez_pad');
+%    clear('Et_pad','Ez_pad');
 
     % Binary vector that denotes if solution is TE or TM
-    binTE = (1:size(Et,2)).' <= size(Et,2)/2;
+    binTE = (1:size(A,1)).' <= nTE;
 
     kc2 = lambda;
 
-    badFc_th = 0.1;
-    badFc = (real(kc2) < 0) | (abs(imag(kc2)) ~= 0);
-%    badFc = real(kc2) < 0;
+    badFc_th = 0.001;
+    badFc = real(kc2) < 0;
+%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) ~= 0);
+%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) >= badFc_th) | (abs(real(kc2)) <= badFc_th);
+
     kc2 = kc2(~badFc);
     Et = Et(:,~badFc);
     Ez = Ez(:,~badFc);

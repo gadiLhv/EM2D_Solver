@@ -1,4 +1,4 @@
-function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssign,simProps,f_sim)
+function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssign,simProps,f_sim)
     % Create a matrix pair for eigenvalue decomposition - Port mode analysis
     %
     % Inputs:
@@ -28,6 +28,14 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     B_zt = A;
     B_zz = A;
 
+    % Find all edges existant in only one triangle, namely, boundary nodes
+    uIdxs = 1:nEdges;
+    howManyTris = sum(sum(bsxfun(@eq,permute(eIdxs,[1 3 2]),uIdxs),3),1);
+
+    boundaryEdges = find(howManyTris(:) == 1);
+    nonBoundaryEdges = uIdxs;
+    nonBoundaryEdges(boundaryEdges) = [];
+
     % Build matrix face by face
     for faceIdx = 1:numel(meshData.face)
         % Extract current parts material properties
@@ -54,7 +62,7 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
 
 
         % Calculate edge lengths
-        eL = cem_calcEdgeLengths(vert_m,triTriplets);
+        eL = cem2D_calcEdgeLengths(vert_m,triTriplets);
 
         % Create interpolants for elements
         [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert_m,triTriplets);
@@ -121,22 +129,19 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
         % Iteratively add sub-matrices
         for e = 1:size(Ae,3)
             ceIdxs = edgeTripliets(e,:);
-            A(ceIdxs,ceIdxs) = A(ceIdxs,ceIdxs) + Ae(:,:,e);
-            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e);
-            B_tz(ceIdxs,ceIdxs) = B_tz(ceIdxs,ceIdxs) + Be_tz(:,:,e);
-            B_zt(ceIdxs,ceIdxs) = B_zt(ceIdxs,ceIdxs) + Be_zt(:,:,e);
-            B_zz(ceIdxs,ceIdxs) = B_zz(ceIdxs,ceIdxs) + Be_zz(:,:,e);
+
+            % Mask boundary nodes
+            binIsBoundary = sum(boundaryEdges(:) == ceIdxs(:).',1) ~= 0;
+
+            boundaryMask = (~binIsBoundary & ~binIsBoundary.');
+            A(ceIdxs,ceIdxs) = A(ceIdxs,ceIdxs) + Ae(:,:,e).*boundaryMask;
+            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e).*boundaryMask;
+            B_tz(ceIdxs,ceIdxs) = B_tz(ceIdxs,ceIdxs) + Be_tz(:,:,e).*boundaryMask;
+            B_zt(ceIdxs,ceIdxs) = B_zt(ceIdxs,ceIdxs) + Be_zt(:,:,e).*boundaryMask;
+            B_zz(ceIdxs,ceIdxs) = B_zz(ceIdxs,ceIdxs) + Be_zz(:,:,e).*boundaryMask;
         end
 
     end % Per-face for loop
-
-    % Find all edges existant in only one triangle, namely, boundary nodes
-    uIdxs = 1:nEdges;
-    howManyTris = sum(sum(bsxfun(@eq,permute(eIdxs,[1 3 2]),uIdxs),3),1);
-
-    boundaryEdges = find(howManyTris(:) == 1);
-    nonBoundaryEdges = uIdxs;
-    nonBoundaryEdges(boundaryEdges) = [];
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Debug: Find boundary nodes, to impose Dirichlet boundary conditions %
@@ -233,6 +238,7 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
 
     Et = EtEz(1:(size(EtEz,1)/2),:);
     Ez = EtEz(((size(EtEz,1)/2)+1):end,:);
+    binTE = (1:size(Et,2)).' <= size(Et,2)/2;
 
 %    Et_pad = zeros([nEdges size(Et,2)]);
 %    Et_pad(nonBoundaryEdges,:) = Et;
@@ -247,32 +253,27 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     Et(:,1:(size(Ez,1))) = [];
     Ez(:,1:(size(Ez,1))) = [];
 
-    kz2 = -real(lambda);
+    kz2 = -lambda;
     kc2 = (2*pi*f_sim/c0)^2 - kz2;
 
-    badFc = kc2 < 0;
+    badFc_th = 0.001;
+%    badFc = real(kc2) < 0;
+%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) ~= 0);
+    badFc = (real(kc2) < 0) | (abs(imag(kc2)) >= badFc_th) | (abs(real(kc2)) <= badFc_th);
+
+    kz2 = kz2(~badFc);
     kc2 = kc2(~badFc);
     Et = Et(:,~badFc);
     Ez = Ez(:,~badFc);
+    binTE = binTE(~badFc);
 
     fc = sqrt(kc2)*c0/(2*pi);
-
-    % Dump all imaginary fc (namely, negative wavenumbers)
-    fc_Th = 0.01;
-    binBadFc = abs(imag(fc)) > fc_Th;
-%    binBadFc = imag(fc) ~= 0;
-    kc2(binBadFc) = [];
-    kz2(binBadFc) = [];
-    Et(:,binBadFc) = [];
-    Ez(:,binBadFc) = [];
-    fc(binBadFc) = [];
-
-    fc = real(fc);
 
     [fc,sortIdxs] = sort(real(fc));
     kz2 = kz2(sortIdxs);
     kc2 = kc2(sortIdxs);
     Et = Et(:,sortIdxs);
+    binTE = binTE(sortIdxs);
 
     kz = sqrt(kz2);
     kz(imag(kz) > 0) = real(kz(imag(kz) > 0)) - 1i*imag(kz(imag(kz) > 0));
@@ -280,6 +281,9 @@ function [kz,fc,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialLi
     Et = Et./(kz(:).');
 
     Ez = Ez/(-1i);
+
+    fc_TE = fc(binTE);
+    fc_TM = fc(~binTE);
 
 end % For main function, "cem2D_createABmat_lossless"
 

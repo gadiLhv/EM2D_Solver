@@ -101,10 +101,9 @@ else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
 
-%[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
-%[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
-%[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
-[fc_TE,fc_TM,Ete,Htm,edgeTriplets] = cem2D_calcModesByCutoff_TETM(meshData,meshProps,materialList,materialAssignement,simProps);
+%[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
+%%[fc_TE,fc_TM,Ete,Htm,edgeTriplets] = cem2D_calcModesByCutoff_TETM(meshData,meshProps,materialList,materialAssignement,simProps);
 
 c0 = physical_constant('speed of light in vacuum');
 kc_TE = 2*pi*fc_TE/c0;
@@ -119,13 +118,19 @@ for tIdx = unique(meshData.tnum).'
         'edgecolor',[0,0,0]) ;
 end
 
+%hold on;
+%for eIdx = unique(meshData.etri(:))
+%    plot(meshData.vert(eIdx,1),meshData.vert(eIdx,2),'.r','markersize',10);
+%end
+%hold off;
+
 [Xm,Ym] = meshgrid(linspace(-0.5*WG_W,0.5*WG_W,25),linspace(0,WG_H,15));
 
 EI = cem2D_vectorElementInterp(...
     meshData.vert,...
     meshData.tria,...
     edgeTriplets,...
-    Ete(:,1));
+    Et(:,46));
 
 Exy = EI(Xm,Ym);
 
