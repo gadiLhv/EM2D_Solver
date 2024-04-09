@@ -105,6 +105,8 @@ end
 [fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
 %%[fc_TE,fc_TM,Ete,Htm,edgeTriplets] = cem2D_calcModesByCutoff_TETM(meshData,meshProps,materialList,materialAssignement,simProps);
 
+fc_large_idxs = find(fc_TE > 1e9);
+
 c0 = physical_constant('speed of light in vacuum');
 kc_TE = 2*pi*fc_TE/c0;
 kc_TM = 2*pi*fc_TM/c0;
@@ -130,7 +132,7 @@ EI = cem2D_vectorElementInterp(...
     meshData.vert,...
     meshData.tria,...
     edgeTriplets,...
-    Et(:,46));
+    Et(:,fc_large_idxs(1)));
 
 Exy = EI(Xm,Ym);
 

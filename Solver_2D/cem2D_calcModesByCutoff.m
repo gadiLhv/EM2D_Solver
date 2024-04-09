@@ -140,7 +140,8 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcModesByCutoff(meshData,meshProps,
     A = [A_tt Zz_TR ; Zz_BL A_zz];
     B = [B_tt Zz_TR ; Zz_BL B_zz];
 
-    [EtEz,lambda] = eig(B\A,'vector');
+%    [EtEz,lambda] = eig(B\A,'vector');
+    [EtEz,lambda] = eig(A,B,'vector');
 
     nTE = size(A_tt,1);
 
