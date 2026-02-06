@@ -22,12 +22,11 @@ function [lambda,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialL
 
     [eIdxs,nEdges,edge2vert] = mesh2D_createEdgeIndexing(meshData);
 
-    % Initial FEM matrix and source vector
-    A_tt = zeros([1 1]*nEdges);
-    B_tt = zeros([1 1]*nEdges);
-    B_tz = zeros([nEdges nVerts]);
-    B_zt = zeros([nVerts nEdges]);
-    B_zz = zeros([1 1]*nVerts);
+    A_tt = sparse(nEdges, nEdges);
+    B_tt = sparse(nEdges, nEdges);
+    B_tz = sparse(nEdges, nVerts);
+    B_zt = sparse(nVerts, nEdges);
+    B_zz = sparse(nVerts, nVerts);
 
     % Find all edges existant in only one triangle, namely, boundary nodes
     uIdxs = 1:nEdges;
@@ -68,61 +67,72 @@ function [lambda,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialL
         % Calculate edge lengths
         eL = cem2D_calcEdgeLengths(vert_m,triTriplets);
 
-        % Create interpolants for elements
+%        % Create interpolants for elements
         [a,b,c,Det] = cem2D_createInterpolantCoeffs1st(vert_m,triTriplets);
 
-        % A matrix is simple enough
-        Ae = imr*Ee(eL,Det) - (er*k0^2)*Fe(eL,Det,b,c);
+        gradN_x = b./(2*Det);
+        gradN_y = c./(2*Det);
 
-        % B matrix top left sub-matrix is still pretty simple
-        Be_tt = imr*Fe(eL,Det,b,c);
+        curlN = calc_curlN(eL,Det);
 
-        % Here it gets nasty
-        eL = permute(eL,[2 3 1]);
-        Det = permute(Det,[3 2 1]);
-        b = permute(b,[2 3 1]);
-        c = permute(c,[2 3 1]);
+        % % A matrix is simple enough
+        % Ae = imr*Ee(eL,Det) - (er*k0^2)*Fe(eL,Det,b,c);
 
-        % "f" elements defined in page 242, "Finite element method in electromagnetics", 1st edition.
-        f = @(i,j) (b(i,:,:).*b(j,:,:) + c(i,:,:).*c(j,:,:));
+        % % B matrix top left sub-matrix is still pretty simple
+        % Be_tt = imr*Fe(eL,Det,b,c);
 
-        % Trans-pol matrices
-        Be_tz_11 = (imr*eL(1,:,:)./(Det*12)).*(f(2,1) - f(1,1));
-        Be_tz_12 = (imr*eL(1,:,:)./(Det*12)).*(f(2,2) - f(1,2));
-        Be_tz_13 = (imr*eL(1,:,:)./(Det*12)).*(f(2,3) - f(1,3));
+        % Modification on the LLM variation. Calculates same matrix (hopefully)
+        % but more explicitly written
+        A_tt_e = zeros(3,3,numel(Det));
+        B_tt_e = zeros(3,3,numel(Det));
 
-        Be_tz_21 = (imr*eL(2,:,:)./(Det*12)).*(f(3,1) - f(2,1));
-        Be_tz_22 = (imr*eL(2,:,:)./(Det*12)).*(f(3,2) - f(2,2));
-        Be_tz_23 = (imr*eL(2,:,:)./(Det*12)).*(f(3,3) - f(2,3));
-
-        Be_tz_31 = (imr*eL(3,:,:)./(Det*12)).*(f(1,1) - f(3,1));
-        Be_tz_32 = (imr*eL(3,:,:)./(Det*12)).*(f(1,2) - f(3,2));
-        Be_tz_33 = (imr*eL(3,:,:)./(Det*12)).*(f(1,3) - f(3,3));
-
-        Be_tz = [   Be_tz_11 Be_tz_12 Be_tz_13 ; ...
-                    Be_tz_21 Be_tz_22 Be_tz_23 ; ...
-                    Be_tz_31 Be_tz_32 Be_tz_33];
-
-        Be_zt = permute(Be_tz,[2 1 3]);
-
-        % And finally, cross-pol elements:
-        Be_zz = zeros([3 3 numel(Det)]);
         for i = 1:3
             for j = 1:3
-                Be_zz(i,j,:) = imr*f(i,j)./(4*Det) - (k0^2)*er*(1 + (i == j)).*Det/12;
+                A_tt_e(i,j,:) = imr*curlN(:,i).*curlN(:,j).*Det ...
+                                 - (k0^2)*er*edgeMass(i,j,Det);
+
+                B_tt_e(i,j,:) = imr*edgeMass(i,j,Det);
             end
         end
 
+        B_tz_e = zeros(3,3,numel(Det));
+        for i = 1:3
+            for j = 1:3
+                B_tz_e(i,j,:) = imr*...
+                  (eL(:,i)./(2*Det)).*...
+                  ( (b(:,mod(i,3)+1)-b(:,i)).*gradN_x(:,j) + ...
+                    (c(:,mod(i,3)+1)-c(:,i)).*gradN_y(:,j)).*Det/6;
+            end
+        end
+        B_zt_e = permute(B_tz_e,[2 1 3]);
+
+        % % And finally, cross-pol elements:
+        % Be_zz = zeros([3 3 numel(Det)]);
+        % for i = 1:3
+        %     for j = 1:3
+        %         Be_zz(i,j,:) = imr*f(i,j)./(4*Det) - (k0^2)*er*(1 + (i == j)).*Det/12;
+        %     end
+        % end
+        B_zz_e = zeros(3,3,numel(Det));
+        for i = 1:3
+          for j = 1:3
+            B_zz_e(i,j,:) = ...
+              imr*(gradN_x(:,i).*gradN_x(:,j) + gradN_y(:,i).*gradN_y(:,j)).*Det ...
+              -(k0^2)*er*nodalMass(i,j,Det);
+          end
+        end
+
+
         % Iteratively add sub-matrices
-        for e = 1:size(Ae,3)
+        for e = 1:size(A_tt_e,3)
             ceIdxs = edgeTripliets(e,:);
             cvIdxs = meshData.tria(e,:);
 
-            A_tt(ceIdxs,ceIdxs) = A_tt(ceIdxs,ceIdxs) + Ae(:,:,e);
-            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e);
-            B_tz(ceIdxs,cvIdxs) = B_tz(ceIdxs,cvIdxs) + Be_tz(:,:,e);
-            B_zt(cvIdxs,ceIdxs) = B_zt(cvIdxs,ceIdxs) + Be_zt(:,:,e);
-            B_zz(cvIdxs,cvIdxs) = B_zz(cvIdxs,cvIdxs) + Be_zz(:,:,e);
+            A_tt(ceIdxs,ceIdxs) = A_tt(ceIdxs,ceIdxs) + A_tt_e(:,:,e);
+            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + B_tt_e(:,:,e);
+            B_tz(ceIdxs,cvIdxs) = B_tz(ceIdxs,cvIdxs) + B_tz_e(:,:,e);
+            B_zt(cvIdxs,ceIdxs) = B_zt(cvIdxs,ceIdxs) + B_zt_e(:,:,e);
+            B_zz(cvIdxs,cvIdxs) = B_zz(cvIdxs,cvIdxs) + B_zz_e(:,:,e);
         end
 
     end % Per-face for loop
@@ -221,8 +231,8 @@ function [lambda,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialL
 %
 %    Zz = zeros([1 1]*(nEdges + nVerts));
 %    Ad = zeros([(nEdges + nVerts) 1]);
-%    Ad(boundaryEdges) = 1e12;
-%    Ad(boundaryVerts + nEdges) = 1e12;
+%    Ad(boundaryEdges) = 1;
+%    Ad(boundaryVerts + nEdges) = 1;
 %    Ad = diag(Ad);
 %
 %    % Enforce on boundary edges and vertices
@@ -288,6 +298,48 @@ function cE = Ee(edgeL,detE)
     cE = bsxfun(@times,bsxfun(@times,edgeL,permute(edgeL,[2 1 3])),1./detE);
 
 end
+
+function curlN = calc_curlN(Le,Det)
+    curlN = Le./(2*Det);
+end
+
+function M = edgeMass(i,j,Det)
+  if i == j
+    M = Det/6;
+  else
+    M = Det/12;
+  end
+end
+
+function M = nodalMass(i,j,Det)
+  if i == j
+    M = Det/6;
+  else
+    M = Det/12;
+  end
+end
+
+function [gradN,b,c,Det] = calc_gradN(verts)
+    % Geometry
+    x = verts(:,1);
+    y = verts(:,2);
+
+    Det = abs(det([1 x(1) y(1);
+                   1 x(2) y(2);
+                   1 x(3) y(3)])) / 2;
+
+    % Gradients of nodal basis
+    b = [y(2)-y(3);
+         y(3)-y(1);
+         y(1)-y(2)];
+
+    c = [x(3)-x(2);
+         x(1)-x(3);
+         x(2)-x(1)];
+
+    gradN = [b c] / (2*Det);   % 3กั2
+end
+
 
 function cF = Fe(edgeL,detE,b,c)
 
