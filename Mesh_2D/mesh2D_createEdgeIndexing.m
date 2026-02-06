@@ -1,4 +1,4 @@
-function [edgeIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData)
+function [edgeIdxs,nEdges,edge2vert] = mesh2D_createEdgeIndexing(meshData)
 
 vert_m = meshData.vert;
 tris = meshData.tria;
@@ -19,6 +19,8 @@ nEdges = size(uEdges,1);
 
 % However, the list was 3 columns concatenated. Let's bring that back
 edgeIdxs = reshape(eIdxs,[],3);
+
+edge2vert = edge_m(uIdxs,:);
 
 end
 

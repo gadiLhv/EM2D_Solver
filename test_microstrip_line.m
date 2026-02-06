@@ -34,13 +34,15 @@ simProps = cem2D_createSimPropsStruct(...
 
                 % Global mesh properties
 meshProps = mesh2D_createMeshPropsStruct(...
-              'relWLmeshMax',0.05, ...
+              'relWLmeshMax',0.005, ...
               'boundingBoxAddSpace',1, ...
               'algorithmType','delfront',...
               'maxRadiusEdgeRatio',1.5);
 
 % Unless overridden, f_sim will be set to the average between fMin and fMax
 % f_sim = 3;
+
+fc_target_GHz = 1.5;
 
 % Line Properties
 Line_W = 0.35;
@@ -119,7 +121,12 @@ if exist('f_sim','var')
 else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
-[kz,fc,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+[lambda,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
+
+k0 = 2*pi*2.55e9/3e8;
+lambda_target = -(k0^2)*0.5*(4.3 + 1)
+
+[~,sortIdxs] = sort(abs(lambda_target - lambda));
 % [fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
 
 % Search for solutions with lowest cutoff.
@@ -140,7 +147,7 @@ EI = cem2D_vectorElementInterp(...
     meshData.vert,...
     meshData.tria,...
     edgeTriplets,...
-    Et(:,2));
+    Et(:,sortIdxs(1)));
 
 Exy = EI(Xm,Ym);
 

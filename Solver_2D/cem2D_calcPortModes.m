@@ -1,4 +1,4 @@
-function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssign,simProps,f_sim)
+function [lambda,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssign,simProps,f_sim)
     % Create a matrix pair for eigenvalue decomposition - Port mode analysis
     %
     % Inputs:
@@ -18,15 +18,16 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
     k0 = 2*pi*f_sim/c0;
 
     vert_m = units(simProps.lengthUnits,'m',meshData.vert);
+    nVerts = size(vert_m,1);
 
-    [eIdxs,nEdges] = mesh2D_createEdgeIndexing(meshData);
+    [eIdxs,nEdges,edge2vert] = mesh2D_createEdgeIndexing(meshData);
 
     % Initial FEM matrix and source vector
-    A = zeros([1 1]*nEdges);
-    B_tt = A;
-    B_tz = A;
-    B_zt = A;
-    B_zz = A;
+    A_tt = zeros([1 1]*nEdges);
+    B_tt = zeros([1 1]*nEdges);
+    B_tz = zeros([nEdges nVerts]);
+    B_zt = zeros([nVerts nEdges]);
+    B_zz = zeros([1 1]*nVerts);
 
     % Find all edges existant in only one triangle, namely, boundary nodes
     uIdxs = 1:nEdges;
@@ -35,6 +36,10 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
     boundaryEdges = find(howManyTris(:) == 1);
     nonBoundaryEdges = uIdxs;
     nonBoundaryEdges(boundaryEdges) = [];
+
+    % Find all boundary vertices
+    boundaryVerts = edge2vert(boundaryEdges,:);
+    boundaryVerts = unique(boundaryVerts(:));
 
     % Build matrix face by face
     for faceIdx = 1:numel(meshData.face)
@@ -59,7 +64,6 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
         % Store all triplets
         triTriplets = meshData.tria(triBinMap,:);
         edgeTripliets = eIdxs(triBinMap,:);
-
 
         % Calculate edge lengths
         eL = cem2D_calcEdgeLengths(vert_m,triTriplets);
@@ -101,23 +105,6 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
 
         Be_zt = permute(Be_tz,[2 1 3]);
 
-%        Be_zt = Be_tz;
-%        Be_zt_11 = (imr*eL(1,:,:)./(Det*12)).*(f(1,2) - f(1,1));
-%        Be_zt_12 = (imr*eL(2,:,:)./(Det*12)).*(f(1,3) - f(1,2));
-%        Be_zt_13 = (imr*eL(3,:,:)./(Det*12)).*(f(1,1) - f(1,3));
-%
-%        Be_zt_21 = (imr*eL(1,:,:)./(Det*12)).*(f(2,2) - f(2,1));
-%        Be_zt_22 = (imr*eL(2,:,:)./(Det*12)).*(f(2,3) - f(2,2));
-%        Be_zt_23 = (imr*eL(3,:,:)./(Det*12)).*(f(2,1) - f(2,3));
-%
-%        Be_zt_31 = (imr*eL(1,:,:)./(Det*12)).*(f(3,2) - f(3,1));
-%        Be_zt_32 = (imr*eL(2,:,:)./(Det*12)).*(f(3,3) - f(3,2));
-%        Be_zt_33 = (imr*eL(3,:,:)./(Det*12)).*(f(3,1) - f(3,3));
-%
-%        Be_zt = [   Be_zt_11 Be_zt_12 Be_zt_13 ; ...
-%                    Be_zt_21 Be_zt_22 Be_zt_23 ; ...
-%                    Be_zt_31 Be_zt_32 Be_zt_33];
-
         % And finally, cross-pol elements:
         Be_zz = zeros([3 3 numel(Det)]);
         for i = 1:3
@@ -129,19 +116,26 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
         % Iteratively add sub-matrices
         for e = 1:size(Ae,3)
             ceIdxs = edgeTripliets(e,:);
+            cvIdxs = meshData.tria(e,:);
 
-            % Mask boundary nodes
-            binIsBoundary = sum(boundaryEdges(:) == ceIdxs(:).',1) ~= 0;
-
-            boundaryMask = (~binIsBoundary & ~binIsBoundary.');
-            A(ceIdxs,ceIdxs) = A(ceIdxs,ceIdxs) + Ae(:,:,e).*boundaryMask;
-            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e).*boundaryMask;
-            B_tz(ceIdxs,ceIdxs) = B_tz(ceIdxs,ceIdxs) + Be_tz(:,:,e).*boundaryMask;
-            B_zt(ceIdxs,ceIdxs) = B_zt(ceIdxs,ceIdxs) + Be_zt(:,:,e).*boundaryMask;
-            B_zz(ceIdxs,ceIdxs) = B_zz(ceIdxs,ceIdxs) + Be_zz(:,:,e).*boundaryMask;
+            A_tt(ceIdxs,ceIdxs) = A_tt(ceIdxs,ceIdxs) + Ae(:,:,e);
+            B_tt(ceIdxs,ceIdxs) = B_tt(ceIdxs,ceIdxs) + Be_tt(:,:,e);
+            B_tz(ceIdxs,cvIdxs) = B_tz(ceIdxs,cvIdxs) + Be_tz(:,:,e);
+            B_zt(cvIdxs,ceIdxs) = B_zt(cvIdxs,ceIdxs) + Be_zt(:,:,e);
+            B_zz(cvIdxs,cvIdxs) = B_zz(cvIdxs,cvIdxs) + Be_zz(:,:,e);
         end
 
     end % Per-face for loop
+
+    %%%%%%%%%%%%%
+    % End Debug %
+    %%%%%%%%%%%%%
+
+%    A = removeBoundaryEdges(A,boundaryEdges);
+%    B_tt = removeBoundaryEdges(B_tt,boundaryEdges);
+%    B_tz = removeBoundaryEdges(B_tz,boundaryEdges);
+%    B_zt = removeBoundaryEdges(B_zt,boundaryEdges);
+%    B_zz = removeBoundaryEdges(B_zz,boundaryEdges);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Debug: Find boundary nodes, to impose Dirichlet boundary conditions %
@@ -166,124 +160,122 @@ function [fc_TE,fc_TM,Et,Ez,eIdxs] = cem2D_calcPortModes(meshData,meshProps,mate
 %
 %        plot([cTriNode(1) ; nTriNode(1)],[cTriNode(2) ; nTriNode(2)],'-r','linewidth',3);
 %    end
+%
+%
+%    sHdl = scatter(meshData.vert(boundaryVerts,1), meshData.vert(boundaryVerts,2),20,'filled');
+%
 %    hold off;
 %    close(gcf);
     %%%%%%%%%%%%%
     % End Debug %
     %%%%%%%%%%%%%
 
-%    A = removeBoundaryEdges(A,boundaryEdges);
-%    B_tt = removeBoundaryEdges(B_tt,boundaryEdges);
-%    B_tz = removeBoundaryEdges(B_tz,boundaryEdges);
-%    B_zt = removeBoundaryEdges(B_zt,boundaryEdges);
-%    B_zz = removeBoundaryEdges(B_zz,boundaryEdges);
+    A_tz = zeros(size(B_tz));
+    A_zt = zeros(size(B_zt));
+    A_zz = zeros(size(B_zz));
+    B = [B_tt B_tz ; B_zt B_zz];
+    A = [A_tt A_tz ; A_zt A_zz];
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Option 1: Buld matrices with boundary conditions inherent %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    binVertsEdges = true([(nVerts + nEdges) 1]);
+    binVertsEdges(boundaryEdges) = false;
+    binVertsEdges(nEdges + boundaryVerts) = false;
+
+    A = removeBoundaryEdges(A,~binVertsEdges);
+    B = removeBoundaryEdges(B,~binVertsEdges);
+
+    % End of options. Solve Eigenvalue problem
+    [EtEz_part,lambda] = eig(A,B,'vector');
+
+    EtEz = zeros([(nVerts + nEdges) size(EtEz_part,2)]);
 
 
-    %%%%%%%%%%%%
-    % Option 1 %
-    %%%%%%%%%%%%
+    EtEz(binVertsEdges,:) = EtEz_part;
 
-%    % On edges that are PEC (single sided edges), remove fields
-%    % Option 1: Only Et
-%    A = A;
-%    B = B_tz*inv(B_zz)*B_zt - B_tt;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Option 2: Build matrices, unite them, then add BC %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %
-%%    A = removeBoundaryEdges(A,boundaryEdges);
-%%    B = removeBoundaryEdges(B,boundaryEdges);
+%    A = inv(B)*A;
+%    B = eye(size(A,1));
 %
+%    A(boundaryEdges + (boundaryEdges - 1)*size(A_tt,1)) = 1;
+%    A(boundaryEdges + (boundaryVerts - 1)*size(B_tz,1)) = 1;
+%    A(boundaryVerts + (boundaryEdges - 1)*size(B_zt,1)) = 1;
+%    A(boundaryVerts + (boundaryVerts - 1)*size(B_zz,1)) = 1;
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Option 3: Impose Dirichlet B.C. explicitly with larger matrix %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%    A_tz = zeros(size(B_tz));
+%    A_zt = zeros(size(B_zt));
+%    A_zz = zeros(size(B_zz));
 %
-%    [Et,lambda] = eig(B\A,'vector');
+%    A = [A_tt A_tz ; A_zt A_zz];
+%    B = [B_tt B_tz ; B_zt B_zz];
 %
-%    Et_pad = zeros([nEdges size(Et,2)]);
-%    Et_pad(nonBoundaryEdges,:) = Et;
-%    Et = Et_pad;
-%    clear('Et_pad');
+%    Zz = zeros([1 1]*(nEdges + nVerts));
+%    Ad = zeros([(nEdges + nVerts) 1]);
+%    Ad(boundaryEdges) = 1e12;
+%    Ad(boundaryVerts + nEdges) = 1e12;
+%    Ad = diag(Ad);
 %
-%    kz2 = lambda;
-%    kc2 = (2*pi*f_sim/c0)^2 - kz2;
+%    % Enforce on boundary edges and vertices
+%    Afull = [A Zz ; Zz Ad];
+%    Bfull = [B Zz ; Zz Zz];
+%
+%    % End of options. Solve Eigenvalue problem
+%    [EtEz,lambda] = eig(Afull,Bfull,'vector');
+%
+%    EtEz = EtEz(1:(nEdges + nVerts),1:(nEdges + nVerts));
+%    lambda = lambda(1:(nEdges + nVerts));
+
+    %%%%%%%%%%%%%%%
+    % End options %
+    %%%%%%%%%%%%%%%
+
+%    EtEz = EtEz.';
+    Et = EtEz(1:nEdges,:);
+    Ez = EtEz((nEdges + 1):end,:);
+
+    k02 = (2*pi*f_sim/c0)^2;
+    kz2 = lambda;
+    kc2 = k02 - kz2;
+
+%    badFc_th = 0.001;
+%    badFc = real(kc2) < 0;
+%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) ~= 0);
+%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) >= badFc_th) | (abs(real(kc2)) <= badFc_th);
+
+%    lambda = lambda(~badFc);
+%    kz2 = kz2(~badFc);
+%    kc2 = kc2(~badFc);
+%    Et = Et(:,~badFc);
+%    Ez = Ez(:,~badFc);
+
+%    binTE = binTE(~badFc);
+
 %    fc = sqrt(kc2)*c0/(2*pi);
-%
-%    % Dump all imaginary fc (namely, negative wavenumbers)
-%    fc_Th = 0.01;
-%    binBadFc = abs(imag(fc)) > fc_Th;
-%%    binBadFc = imag(fc) ~= 0;
-%    kc2(binBadFc) = [];
-%    kz2(binBadFc) = [];
-%    Et(:,binBadFc) = [];
-%    fc(binBadFc) = [];
-%
-%    fc = real(fc);
-%
+
 %    [fc,sortIdxs] = sort(real(fc));
 %    kz2 = kz2(sortIdxs);
 %    kc2 = kc2(sortIdxs);
 %    Et = Et(:,sortIdxs);
-%
-%    kz = sqrt(kz2);
-%    kz(imag(kz) > 0) = real(kz(imag(kz) > 0)) - 1i*imag(kz(imag(kz) > 0));
-%
-%    Et = Et./(kz(:).');
-%
-%    Ez = NaN;
-
-    %%%%%%%%%%%%
-    % Option 2 %
-    %%%%%%%%%%%%
-
-    Zz = zeros(size(A));
-    A = [A Zz ; Zz Zz];
-    B = [B_tt B_tz ; B_zt B_zz];
-
-    [EtEz,lambda] = eig(B\A,'vector');
-
-    Et = EtEz(1:(size(EtEz,1)/2),:);
-    Ez = EtEz(((size(EtEz,1)/2)+1):end,:);
-    binTE = (1:size(Et,2)).' <= size(Et,2)/2;
-
-%    Et_pad = zeros([nEdges size(Et,2)]);
-%    Et_pad(nonBoundaryEdges,:) = Et;
-%    Et = Et_pad;
-%    Ez_pad = zeros([nEdges size(Ez,2)]);
-%    Ez_pad(nonBoundaryEdges,:) = Ez;
-%    Ez = Ez_pad;
-%    clear('Et_pad','Ez_pad');
-
-    % Delete first half
-    lambda(1:(size(Ez,1))) = [];
-    Et(:,1:(size(Ez,1))) = [];
-    Ez(:,1:(size(Ez,1))) = [];
-
-    kz2 = -lambda;
-    kc2 = (2*pi*f_sim/c0)^2 - kz2;
-
-    badFc_th = 0.001;
-%    badFc = real(kc2) < 0;
-%    badFc = (real(kc2) < 0) | (abs(imag(kc2)) ~= 0);
-    badFc = (real(kc2) < 0) | (abs(imag(kc2)) >= badFc_th) | (abs(real(kc2)) <= badFc_th);
-
-    kz2 = kz2(~badFc);
-    kc2 = kc2(~badFc);
-    Et = Et(:,~badFc);
-    Ez = Ez(:,~badFc);
-    binTE = binTE(~badFc);
-
-    fc = sqrt(kc2)*c0/(2*pi);
-
-    [fc,sortIdxs] = sort(real(fc));
-    kz2 = kz2(sortIdxs);
-    kc2 = kc2(sortIdxs);
-    Et = Et(:,sortIdxs);
-    binTE = binTE(sortIdxs);
+%    binTE = binTE(sortIdxs);
 
     kz = sqrt(kz2);
     kz(imag(kz) > 0) = real(kz(imag(kz) > 0)) - 1i*imag(kz(imag(kz) > 0));
 
     Et = Et./(kz(:).');
-
     Ez = Ez/(-1i);
 
-    fc_TE = fc(binTE);
-    fc_TM = fc(~binTE);
+%    fc_TE = fc(binTE);
+%    fc_TM = fc(~binTE);
 
 end % For main function, "cem2D_createABmat_lossless"
 
@@ -295,11 +287,6 @@ function cE = Ee(edgeL,detE)
     % Calculate the Eij matrix per element
     cE = bsxfun(@times,bsxfun(@times,edgeL,permute(edgeL,[2 1 3])),1./detE);
 
-end
-
-function A = removeBoundaryEdges(A,i)
-    A(:,i) = [];
-    A(i,:) = [];
 end
 
 function cF = Fe(edgeL,detE,b,c)
@@ -324,3 +311,9 @@ function cF = Fe(edgeL,detE,b,c)
     cF = [Fe11 Fe12 Fe13 ; Fe12 Fe22 Fe23 ; Fe13 Fe23 Fe33];
 
 end
+
+function A = removeBoundaryEdges(A,i)
+    A(:,i) = [];
+    A(i,:) = [];
+end
+

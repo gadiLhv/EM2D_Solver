@@ -101,18 +101,19 @@ else
     f_sim = 0.5*(simProps.fMin + simProps.fMax);
 end
 
-%[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
-[fc_TE,fc_TM,Et,Ez,edgeTriplets] = cem2D_calcModesByCutoff(meshData,meshProps,materialList,materialAssignement,simProps);
-%%[fc_TE,fc_TM,Ete,Htm,edgeTriplets] = cem2D_calcModesByCutoff_TETM(meshData,meshProps,materialList,materialAssignement,simProps);
-
-fc_large_idxs = find(fc_TE > 1e9);
+[lambda,Et,Ez,edgeTriplets] = cem2D_calcPortModes(meshData,meshProps,materialList,materialAssignement,simProps,f_sim);
 
 c0 = physical_constant('speed of light in vacuum');
-kc_TE = 2*pi*fc_TE/c0;
-kc_TM = 2*pi*fc_TM/c0;
-ref_TE = kc_TE*(WG_W/1000);
-ref_TM = kc_TM*(WG_W/1000);
-hold(axHdl,'on');
+k0 = 2*pi*(f_sim*1e9)/c0;
+lambda_target = (k0^2)
+
+kz2 = lambda;
+kc2 = (2*pi*(f_sim*1e9)/c0)^2 - kz2;
+fc = sqrt(kc2)*c0/(2*pi);
+
+%fc(imag(fc) ~= 0) = inf;
+
+[~,sortIdxs] = sort(fc);
 
 for tIdx = unique(meshData.tnum).'
     patch('faces',meshData.tria(meshData.tnum == tIdx,1:3),'vertices',meshData.vert, ...
@@ -120,7 +121,7 @@ for tIdx = unique(meshData.tnum).'
         'edgecolor',[0,0,0]) ;
 end
 
-%hold on;
+hold on;
 %for eIdx = unique(meshData.etri(:))
 %    plot(meshData.vert(eIdx,1),meshData.vert(eIdx,2),'.r','markersize',10);
 %end
@@ -128,11 +129,16 @@ end
 
 [Xm,Ym] = meshgrid(linspace(-0.5*WG_W,0.5*WG_W,25),linspace(0,WG_H,15));
 
+
+showMode = 1;
+
 EI = cem2D_vectorElementInterp(...
     meshData.vert,...
     meshData.tria,...
     edgeTriplets,...
-    Et(:,fc_large_idxs(1)));
+    Et(:,sortIdxs(showMode)));
+
+fprintf(1,'Cutoff frequency = %.3f [GHz]\n',fc(sortIdxs(showMode))/1e9);
 
 Exy = EI(Xm,Ym);
 

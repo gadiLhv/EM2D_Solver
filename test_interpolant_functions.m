@@ -20,8 +20,8 @@ edgeTriplets = [1 2 3];
 
 % Create grid
 
-nx = 15;
-ny = 15;
+nx = 10;
+ny = 10;
 
 [xm,ym] = meshgrid(...
     linspace(min(vert_m(:,1)),max(vert_m(:,1)),nx),...
@@ -30,8 +30,8 @@ ny = 15;
 
 
 
-figure('position', [300    200   1202    770]);
-subplot(2,2,1);
+figure('position', [300    203   1617    503]);
+subplot(1,3,1);
 polHdl = patch (vert_m(:,1),vert_m(:,2), ...
               'facecolor', [1 1 1], ...
               'edgecolor', [0 0 0]);
@@ -53,7 +53,12 @@ hold on;
 quiver(xm,ym,N1(:,1),N1(:,2));
 hold off;
 
-subplot(2,2,2);
+axis([0 1 0 1]);
+axis('square');
+set(gca,'fontsize',14);
+
+
+subplot(1,3,2);
 polHdl = patch (vert_m(:,1),vert_m(:,2), ...
               'facecolor', [1 1 1], ...
               'edgecolor', [0 0 0]);
@@ -64,7 +69,12 @@ hold on;
 quiver(xm,ym,N2(:,1),N2(:,2));
 hold off;
 
-subplot(2,2,3);
+axis([0 1 0 1]);
+axis('square');
+
+set(gca,'fontsize',14);
+
+subplot(1,3,3);
 polHdl = patch (vert_m(:,1),vert_m(:,2), ...
               'facecolor', [1 1 1], ...
               'edgecolor', [0 0 0]);
@@ -75,4 +85,10 @@ hold on;
 quiver(xm,ym,N3(:,1),N3(:,2));
 hold off;
 
+axis([0 1 0 1]);
+axis('square');
+
+set(gca,'fontsize',14);
+
 warning on;
+
